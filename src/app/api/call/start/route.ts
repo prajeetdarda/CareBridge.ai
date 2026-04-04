@@ -1,15 +1,23 @@
 import { NextResponse } from "next/server";
+import type { StartCallRequest, StartCallResponse } from "@/lib/types";
 
 /**
  * POST /api/call/start
  * Dev 1 owns this route.
- * Starts a new check-in call session.
+ *
+ * Request:  StartCallRequest  { lovedOneName, language }
+ * Response: StartCallResponse { sessionId, status, startedAt }
  */
-export async function POST() {
-  const sessionId = crypto.randomUUID();
-  return NextResponse.json({
-    sessionId,
+export async function POST(request: Request) {
+  const body: StartCallRequest = await request.json();
+  const { lovedOneName, language } = body;
+
+  const response: StartCallResponse = {
+    sessionId: crypto.randomUUID(),
     status: "ringing",
     startedAt: new Date().toISOString(),
-  });
+  };
+
+  console.log(`[call/start] New session for ${lovedOneName} (${language}):`, response.sessionId);
+  return NextResponse.json(response);
 }

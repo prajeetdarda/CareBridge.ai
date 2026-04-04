@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
-import type { FamilyProfile } from "@/lib/types";
+import type {
+  FamilyProfile,
+  UpdateSettingsRequest,
+  GetSettingsResponse,
+  UpdateSettingsResponse,
+} from "@/lib/types";
 
 const defaultProfile: FamilyProfile = {
   familyMemberName: "Anjali",
@@ -18,13 +23,15 @@ const defaultProfile: FamilyProfile = {
  * Dev 2 owns this route.
  */
 export async function GET() {
-  return NextResponse.json({ profile: defaultProfile });
+  const response: GetSettingsResponse = { profile: defaultProfile };
+  return NextResponse.json(response);
 }
 
 export async function PUT(request: Request) {
-  const body = await request.json();
-  return NextResponse.json({
+  const body: UpdateSettingsRequest = await request.json();
+  const response: UpdateSettingsResponse = {
     success: true,
     profile: { ...defaultProfile, ...body },
-  });
+  };
+  return NextResponse.json(response);
 }

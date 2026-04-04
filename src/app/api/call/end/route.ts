@@ -1,20 +1,25 @@
 import { NextResponse } from "next/server";
+import type { EndCallRequest, EndCallResponse } from "@/lib/types";
 
 /**
  * POST /api/call/end
  * Dev 1 owns this route.
- * Ends the current call session and forwards the transcript to the summary API.
  *
- * Expected body: { sessionId: string, transcript: string }
+ * Request:  EndCallRequest  { sessionId, transcript }
+ * Response: EndCallResponse { success, sessionId, endedAt }
+ *
+ * After this returns, Dev 1's frontend should POST to /api/summary
+ * with the full SubmitSummaryRequest to hand off to Dev 2's pipeline.
  */
 export async function POST(request: Request) {
-  const body = await request.json();
-  const { sessionId, transcript } = body;
+  const body: EndCallRequest = await request.json();
 
-  return NextResponse.json({
+  const response: EndCallResponse = {
     success: true,
-    sessionId,
+    sessionId: body.sessionId,
     endedAt: new Date().toISOString(),
-    transcriptLength: transcript?.length ?? 0,
-  });
+  };
+
+  console.log(`[call/end] Session ${body.sessionId} ended, transcript length: ${body.transcript?.length ?? 0}`);
+  return NextResponse.json(response);
 }

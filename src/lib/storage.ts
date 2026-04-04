@@ -1,4 +1,4 @@
-import type { SummaryRecord, FamilyProfile } from "./types";
+import type { SummaryRecord, AlertRecord, FamilyProfile } from "./types";
 
 /**
  * Mock storage — Dev 2 owns this file.
@@ -8,6 +8,7 @@ import type { SummaryRecord, FamilyProfile } from "./types";
  */
 
 const summaries: SummaryRecord[] = [];
+const alerts: AlertRecord[] = [];
 
 const defaultProfile: FamilyProfile = {
   familyMemberName: "Anjali",
@@ -27,6 +28,23 @@ export function getSummaries(): SummaryRecord[] {
 
 export function addSummary(record: SummaryRecord): void {
   summaries.push(record);
+}
+
+export function getAlerts(): AlertRecord[] {
+  return alerts;
+}
+
+export function addAlert(record: AlertRecord): void {
+  alerts.push(record);
+}
+
+export function acknowledgeAlert(alertId: string): boolean {
+  const alert = alerts.find((a) => a.id === alertId);
+  if (alert) {
+    alert.acknowledged = true;
+    return true;
+  }
+  return false;
 }
 
 export function getProfile(): FamilyProfile {
