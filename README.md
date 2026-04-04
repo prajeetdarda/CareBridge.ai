@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Family Care Relay AI
+
+A consent-based AI family care relay for immigrant families — stay informed about aging parents when distance, time zones, work, or travel make direct communication difficult.
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to see the role-select screen.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+  app/
+    page.tsx                  — Role select (Parent vs Child)
+    layout.tsx                — Shared layout
+    parent/                   — Dev 1: Parent/grandparent screens
+      page.tsx                — Parent home
+      call/page.tsx           — Live call screen
+      update/page.tsx         — Leave update screen
+    family/                   — Dev 2: Child/family screens
+      page.tsx                — Family dashboard
+      summaries/page.tsx      — Summary history
+      alerts/page.tsx         — Urgent alerts
+      settings/page.tsx       — Care settings
+    api/
+      call/start/route.ts     — Dev 1: Start call session
+      call/end/route.ts       — Dev 1: End call, post transcript
+      summary/route.ts        — Dev 2: Create/fetch summaries
+      alerts/route.ts         — Dev 2: Create/fetch alerts
+      settings/route.ts       — Dev 2: Read/write settings
+  lib/
+    types.ts                  — Shared types (DO NOT edit without coordinating)
+    gemini.ts                 — Dev 1: Gemini Live API
+    audio.ts                  — Dev 1: Mic/audio helpers
+    intelligence.ts           — Dev 2: Summary + urgency engine
+    storage.ts                — Dev 2: Mock storage
+  components/
+    call/                     — Dev 1: Call UI components
+    dashboard/                — Dev 2: Dashboard components
+```
 
-## Learn More
+## Developer Ownership
 
-To learn more about Next.js, take a look at the following resources:
+| Area | Owner |
+|------|-------|
+| `app/parent/**`, `components/call/**`, `lib/gemini.ts`, `lib/audio.ts`, `api/call/**` | Dev 1 |
+| `app/family/**`, `components/dashboard/**`, `lib/intelligence.ts`, `lib/storage.ts`, `api/summary/**`, `api/alerts/**`, `api/settings/**` | Dev 2 |
+| `lib/types.ts`, `app/layout.tsx`, `app/page.tsx`, `globals.css` | Shared (frozen after setup) |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## API Contract
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `POST /api/call/start` → `{ sessionId, status, startedAt }`
+- `POST /api/call/end` → `{ success, sessionId, endedAt }` (body: `{ sessionId, transcript }`)
+- `GET /api/summary` → `{ summaries: SummaryRecord[] }`
+- `POST /api/summary` → `{ summary: SummaryRecord }` (body: `{ transcript, sessionId }`)
+- `GET /api/alerts` → `{ alerts: [] }`
+- `POST /api/alerts` → `{ success, alert }` (body: alert data)
+- `GET /api/settings` → `{ profile: FamilyProfile }`
+- `PUT /api/settings` → `{ success, profile }` (body: partial FamilyProfile)
