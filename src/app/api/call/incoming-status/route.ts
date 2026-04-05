@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { GetIncomingStatusResponse } from "@/lib/types";
-import { getPendingCall } from "@/lib/storage";
+import { getPendingCall } from "@/lib/storage-adapter";
 
 /**
  * GET /api/call/incoming-status?sessionId=...
@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const pending = getPendingCall(sessionId);
+  const pending = await getPendingCall(sessionId);
   if (!pending) {
     const body: GetIncomingStatusResponse = { phase: "gone" };
     return NextResponse.json(body);
@@ -42,7 +42,6 @@ export async function GET(request: Request) {
     return NextResponse.json(body);
   }
 
-  // Immediate check-in: ring once family created session (incomingSignalAt set)
   if (pending.incomingSignalAt) {
     const body: GetIncomingStatusResponse = {
       phase: "ringing",
@@ -51,7 +50,6 @@ export async function GET(request: Request) {
     return NextResponse.json(body);
   }
 
-  // Legacy rows without incomingSignalAt, no schedule → treat as active
   const body: GetIncomingStatusResponse = { phase: "ringing", voiceProvider };
   return NextResponse.json(body);
 }

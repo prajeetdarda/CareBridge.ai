@@ -6,7 +6,7 @@ import type {
   SummaryRecord,
 } from "@/lib/types";
 import { processTranscript } from "@/lib/intelligence";
-import { addSummary, addAlert, getSummaries, getProfile } from "@/lib/storage";
+import { addSummary, addAlert, getSummaries, getProfile } from "@/lib/storage-adapter";
 import {
   extractEscalationRecipients,
   sendUrgentEscalationEmails,
@@ -17,7 +17,7 @@ import {
  * POST /api/summary — transcript handoff from Dev 1: LLM pipeline + storage + alerts
  */
 export async function GET() {
-  const list = getSummaries()
+  const list = (await getSummaries())
     .slice()
     .sort(
       (a, b) =>
@@ -46,11 +46,10 @@ export async function POST(request: Request) {
     );
   }
 
-  const profile = getProfile();
+  const profile = await getProfile();
   const { careTopics } = profile;
   const analyzed = await processTranscript(body, careTopics);
 
-  // For media-only updates, prefer the AI-extracted transcription over the empty client string
   const storedTranscript = analyzed.aiTranscription ?? body.transcript;
 
   let actionTaken: string | undefined;
@@ -93,10 +92,10 @@ export async function POST(request: Request) {
     callDurationSeconds: analyzed.callDurationSeconds,
   };
 
-  addSummary(record);
+  await addSummary(record);
 
   if (analyzed.urgencyLevel !== "summary_later") {
-    addAlert({
+    await addAlert({
       id: crypto.randomUUID(),
       sessionId: body.sessionId,
       timestamp: new Date().toISOString(),

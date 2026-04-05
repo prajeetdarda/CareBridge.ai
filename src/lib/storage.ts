@@ -8,12 +8,11 @@ import type {
 } from "./types";
 
 /**
- * File-backed storage for the hackathon demo.
+ * File-backed storage for local development / hackathon demo.
  * Data is persisted to tmp/db/*.json so it survives server restarts.
- * All function signatures are sync and identical to the previous in-memory
- * version — no API routes need to change.
  *
- * Will be replaced with Supabase in the hosted version.
+ * All functions are async to match the Supabase adapter interface.
+ * When STORAGE_BACKEND=supabase, storage-supabase.ts is used instead.
  */
 
 const DB_DIR = path.join(process.cwd(), "tmp", "db");
@@ -57,30 +56,30 @@ function writeJson(filePath: string, data: unknown): void {
 
 // ── Summaries ──────────────────────────────────────────────────────────────
 
-export function getSummaries(): SummaryRecord[] {
+export async function getSummaries(): Promise<SummaryRecord[]> {
   return readJson<SummaryRecord[]>(SUMMARIES_PATH, []);
 }
 
-export function addSummary(record: SummaryRecord): void {
-  const list = getSummaries();
+export async function addSummary(record: SummaryRecord): Promise<void> {
+  const list = await getSummaries();
   list.push(record);
   writeJson(SUMMARIES_PATH, list);
 }
 
 // ── Alerts ─────────────────────────────────────────────────────────────────
 
-export function getAlerts(): AlertRecord[] {
+export async function getAlerts(): Promise<AlertRecord[]> {
   return readJson<AlertRecord[]>(ALERTS_PATH, []);
 }
 
-export function addAlert(record: AlertRecord): void {
-  const list = getAlerts();
+export async function addAlert(record: AlertRecord): Promise<void> {
+  const list = await getAlerts();
   list.push(record);
   writeJson(ALERTS_PATH, list);
 }
 
-export function acknowledgeAlert(alertId: string): boolean {
-  const list = getAlerts();
+export async function acknowledgeAlert(alertId: string): Promise<boolean> {
+  const list = await getAlerts();
   const alert = list.find((a) => a.id === alertId);
   if (!alert) return false;
   alert.acknowledged = true;
@@ -90,12 +89,12 @@ export function acknowledgeAlert(alertId: string): boolean {
 
 // ── Profile ────────────────────────────────────────────────────────────────
 
-export function getProfile(): FamilyProfile {
+export async function getProfile(): Promise<FamilyProfile> {
   return readJson<FamilyProfile>(PROFILE_PATH, { ...defaultProfile });
 }
 
-export function updateProfile(updates: Partial<FamilyProfile>): FamilyProfile {
-  const current = getProfile();
+export async function updateProfile(updates: Partial<FamilyProfile>): Promise<FamilyProfile> {
+  const current = await getProfile();
   const updated = { ...current, ...updates };
   writeJson(PROFILE_PATH, updated);
   return updated;
@@ -103,22 +102,22 @@ export function updateProfile(updates: Partial<FamilyProfile>): FamilyProfile {
 
 // ── Pending check-in sessions (child → parent handoff) ─────────────────────
 
-function getPendingCalls(): PendingCallRecord[] {
+async function getPendingCalls(): Promise<PendingCallRecord[]> {
   return readJson<PendingCallRecord[]>(PENDING_CALLS_PATH, []);
 }
 
-function writePendingCalls(list: PendingCallRecord[]): void {
+async function writePendingCalls(list: PendingCallRecord[]): Promise<void> {
   writeJson(PENDING_CALLS_PATH, list);
 }
 
-export function savePendingCall(record: PendingCallRecord): void {
-  const list = getPendingCalls().filter((p) => p.sessionId !== record.sessionId);
+export async function savePendingCall(record: PendingCallRecord): Promise<void> {
+  const list = (await getPendingCalls()).filter((p) => p.sessionId !== record.sessionId);
   list.push(record);
-  writePendingCalls(list);
+  await writePendingCalls(list);
 }
 
-export function getPendingCall(sessionId: string): PendingCallRecord | null {
-  const list = getPendingCalls();
+export async function getPendingCall(sessionId: string): Promise<PendingCallRecord | null> {
+  const list = await getPendingCalls();
   const rec = list.find((p) => p.sessionId === sessionId);
   if (!rec) return null;
   const now = Date.now();
@@ -126,7 +125,7 @@ export function getPendingCall(sessionId: string): PendingCallRecord | null {
   return rec;
 }
 
-export function deletePendingCall(sessionId: string): void {
-  const list = getPendingCalls().filter((p) => p.sessionId !== sessionId);
-  writePendingCalls(list);
+export async function deletePendingCall(sessionId: string): Promise<void> {
+  const list = (await getPendingCalls()).filter((p) => p.sessionId !== sessionId);
+  await writePendingCalls(list);
 }

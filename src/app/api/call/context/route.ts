@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { GetCallContextResponse } from "@/lib/types";
-import { getPendingCall } from "@/lib/storage";
+import { getPendingCall } from "@/lib/storage-adapter";
 import { buildCheckInSystemInstruction } from "@/lib/call-prompt";
 
 /**
@@ -17,7 +17,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const pending = getPendingCall(sessionId);
+  const pending = await getPendingCall(sessionId);
   if (!pending) {
     return NextResponse.json(
       { error: "Unknown or expired check-in link" },

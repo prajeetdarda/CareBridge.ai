@@ -14,7 +14,11 @@ export type CallVoiceProvider = "gemini" | "elevenlabs";
 
 export interface FamilyProfile {
   familyMemberName: string;
+  /** Optional: HTTPS URL, site path (e.g. /child-profile.png), or small data URL for avatar */
+  familyMemberImageUrl?: string;
   lovedOneName: string;
+  /** Optional: URL, site path (e.g. /parent-profile.png), or small data URL */
+  lovedOneImageUrl?: string;
   /** ISO date YYYY-MM-DD for age on dashboard */
   lovedOneDateOfBirth?: string;
   preferredLanguage: string;
@@ -131,7 +135,9 @@ export interface CreateAlertRequest {
 
 export interface UpdateSettingsRequest {
   familyMemberName?: string;
+  familyMemberImageUrl?: string;
   lovedOneName?: string;
+  lovedOneImageUrl?: string;
   lovedOneDateOfBirth?: string;
   preferredLanguage?: string;
   relationshipLabel?: string;

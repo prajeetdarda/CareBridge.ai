@@ -4,7 +4,7 @@ import type {
   StartCallRequest,
   StartCallResponse,
 } from "@/lib/types";
-import { getProfile, savePendingCall } from "@/lib/storage";
+import { getProfile, savePendingCall } from "@/lib/storage-adapter";
 
 const TTL_MS = 48 * 60 * 60 * 1000;
 
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
   const voiceProvider: CallVoiceProvider =
     rawVoice === "elevenlabs" ? "elevenlabs" : "gemini";
 
-  const profile = getProfile();
+  const profile = await getProfile();
   const profileSnapshot = structuredClone(profile) as typeof profile;
 
   const sessionId = crypto.randomUUID();
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
 
   const incomingSignalAt = mode === "now" ? createdAt : null;
 
-  savePendingCall({
+  await savePendingCall({
     sessionId,
     createdAt,
     expiresAt,

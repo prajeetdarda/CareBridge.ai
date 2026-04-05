@@ -5,7 +5,7 @@ import type {
   GetAlertsResponse,
   AlertRecord,
 } from "@/lib/types";
-import { addAlert, getAlerts, acknowledgeAlert } from "@/lib/storage";
+import { addAlert, getAlerts, acknowledgeAlert } from "@/lib/storage-adapter";
 
 /**
  * GET   /api/alerts — active (unacknowledged) alerts, newest first
@@ -13,7 +13,7 @@ import { addAlert, getAlerts, acknowledgeAlert } from "@/lib/storage";
  * PATCH /api/alerts — body { alertId: string } — mark acknowledged
  */
 export async function GET() {
-  const active = getAlerts()
+  const active = (await getAlerts())
     .filter((a) => !a.acknowledged)
     .sort(
       (a, b) =>
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     acknowledged: false,
   };
 
-  addAlert(alert);
+  await addAlert(alert);
 
   const response: CreateAlertResponse = { success: true, alert };
   return NextResponse.json(response);
@@ -70,7 +70,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "alertId is required" }, { status: 400 });
   }
 
-  const ok = acknowledgeAlert(body.alertId);
+  const ok = await acknowledgeAlert(body.alertId);
   if (!ok) {
     return NextResponse.json({ error: "Alert not found" }, { status: 404 });
   }

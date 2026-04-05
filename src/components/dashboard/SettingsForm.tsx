@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Pencil } from "lucide-react";
 import type { FamilyProfile, ReminderRecord, BackupContact } from "@/lib/types";
 import {
   normalizeParentLang,
@@ -23,6 +24,9 @@ const TOPIC_OPTIONS = [
   "mobility",
 ];
 
+const DEFAULT_LOVED_ONE_PHOTO = "/parent-profile.png";
+const MAX_LOVED_ONE_PHOTO_BYTES = 220 * 1024;
+
 export default function SettingsForm({ initial }: SettingsFormProps) {
   const { isDark, cursorGlowClass, handlePointerMove } = useCareTheme();
   const router = useRouter();
@@ -30,6 +34,11 @@ export default function SettingsForm({ initial }: SettingsFormProps) {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [uploadedFiles, setUploadedFiles] = useState(0);
+  const lovedOnePhotoInputRef = useRef<HTMLInputElement>(null);
+  const [lovedOnePhotoUrlDraft, setLovedOnePhotoUrlDraft] = useState("");
+
+  const lovedOnePhotoSrc =
+    profile.lovedOneImageUrl?.trim() || DEFAULT_LOVED_ONE_PHOTO;
 
   async function save() {
     setSaving(true);
@@ -40,7 +49,9 @@ export default function SettingsForm({ initial }: SettingsFormProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           familyMemberName: profile.familyMemberName,
+          familyMemberImageUrl: profile.familyMemberImageUrl,
           lovedOneName: profile.lovedOneName,
+          lovedOneImageUrl: profile.lovedOneImageUrl?.trim() ?? "",
           lovedOneDateOfBirth: profile.lovedOneDateOfBirth ?? "",
           preferredLanguage: profile.preferredLanguage,
           relationshipLabel: profile.relationshipLabel,
@@ -123,6 +134,43 @@ export default function SettingsForm({ initial }: SettingsFormProps) {
     setProfile((p) => ({ ...p, reminderRules: p.reminderRules.filter((_, i) => i !== index) }));
   }
 
+  function onLovedOnePhotoFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setMessage("Please choose an image file for the photo.");
+      return;
+    }
+    if (file.size > MAX_LOVED_ONE_PHOTO_BYTES) {
+      setMessage("Loved one’s photo should be about 220 KB or smaller.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setProfile((p) => ({ ...p, lovedOneImageUrl: reader.result as string }));
+      setMessage(null);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function applyLovedOnePhotoUrl() {
+    const t = lovedOnePhotoUrlDraft.trim();
+    if (!t) {
+      setMessage("Paste an image URL first.");
+      return;
+    }
+    setProfile((p) => ({ ...p, lovedOneImageUrl: t }));
+    setLovedOnePhotoUrlDraft("");
+    setMessage(null);
+  }
+
+  function resetLovedOnePhoto() {
+    setProfile((p) => ({ ...p, lovedOneImageUrl: "" }));
+    setLovedOnePhotoUrlDraft("");
+    setMessage(null);
+  }
+
   const cardBase = isDark
     ? "border-zinc-800 bg-[rgba(24,24,30,0.7)]"
     : "border-zinc-200/60 bg-white shadow-[0_2px_20px_rgba(0,0,0,0.04)]";
@@ -149,15 +197,70 @@ export default function SettingsForm({ initial }: SettingsFormProps) {
       {/* Avatar + profile fields */}
       <section onPointerMove={handlePointerMove} className={`${cardCls} space-y-5`}>
         <div className="flex flex-col items-center gap-2">
-          <div
-            className={`h-24 w-24 overflow-hidden rounded-full p-0.5 ${
-              isDark
-                ? "bg-gradient-to-br from-[#fb923c] to-[#ec4899]"
-                : "bg-gradient-to-br from-[#fb923c] to-[#ec4899]"
-            }`}
+          <div className="relative inline-block">
+            <div
+              className={`h-24 w-24 overflow-hidden rounded-full p-0.5 ${
+                isDark
+                  ? "bg-gradient-to-br from-[#fb923c] to-[#ec4899]"
+                  : "bg-gradient-to-br from-[#fb923c] to-[#ec4899]"
+              }`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={lovedOnePhotoSrc}
+                alt={profile.lovedOneName || "Loved one"}
+                className="h-full w-full rounded-full object-cover"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => lovedOnePhotoInputRef.current?.click()}
+              className={`absolute -bottom-0.5 -right-0.5 flex h-9 w-9 items-center justify-center rounded-full border-2 shadow-md transition hover:scale-105 ${
+                isDark
+                  ? "border-zinc-900 bg-[#e11d48] text-white hover:bg-[#be123c]"
+                  : "border-white bg-[#e11d48] text-white hover:bg-[#be123c]"
+              }`}
+              aria-label="Change loved one’s photo"
+              title="Change photo"
+            >
+              <Pencil className="h-4 w-4" strokeWidth={2.5} aria-hidden />
+            </button>
+            <input
+              ref={lovedOnePhotoInputRef}
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              onChange={onLovedOnePhotoFile}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={resetLovedOnePhoto}
+            className={`text-xs font-medium underline-offset-2 hover:underline ${mutedText}`}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/parent-profile.png" alt={profile.lovedOneName || "Loved one"} className="h-full w-full rounded-full object-cover" />
+            Use default photo
+          </button>
+          <div className="flex w-full max-w-sm flex-col gap-1.5 sm:flex-row sm:items-center">
+            <input
+              type="url"
+              value={lovedOnePhotoUrlDraft}
+              onChange={(e) => setLovedOnePhotoUrlDraft(e.target.value)}
+              placeholder="Or paste image URL"
+              className={`min-w-0 flex-1 rounded-lg border px-3 py-2 text-xs outline-none ${
+                isDark
+                  ? "border-zinc-700 bg-zinc-900 text-zinc-100 placeholder:text-zinc-500 focus:ring-2 focus:ring-[#e11d48]/30"
+                  : "border-zinc-200 bg-white text-[#1f2937] placeholder:text-zinc-400 focus:ring-2 focus:ring-[#e11d48]/20"
+              }`}
+            />
+            <button
+              type="button"
+              onClick={applyLovedOnePhotoUrl}
+              className={`shrink-0 rounded-lg px-3 py-2 text-xs font-semibold text-white ${
+                isDark ? "bg-[#be123c] hover:bg-[#9f1239]" : "bg-[#e11d48] hover:bg-[#be123c]"
+              }`}
+            >
+              Apply URL
+            </button>
           </div>
           <p className={`text-lg font-semibold ${headText}`}>
             {profile.lovedOneName || "Loved one"}

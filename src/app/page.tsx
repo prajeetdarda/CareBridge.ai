@@ -154,7 +154,7 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-4">
             <Link
-              href="/demo-signup"
+              href="/login"
               className="hidden text-sm font-semibold text-[#31243d]/70 transition-colors hover:text-[#31243d] sm:block"
             >
               Login

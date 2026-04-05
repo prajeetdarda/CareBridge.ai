@@ -12,12 +12,15 @@ import {
   Sun,
   UserRound,
 } from "lucide-react";
+import FamilyProfileMenu from "@/components/family/FamilyProfileMenu";
 
 type ThemeChoice = "light" | "dark";
 
 interface FamilyDashboardClientProps {
   familyMemberName: string;
+  familyMemberImageUrl?: string;
   lovedOneName: string;
+  lovedOneImageUrl?: string;
   relationshipLabel: string;
   urgentCount: number;
   notifySoonCount: number;
@@ -41,7 +44,9 @@ const THEME_STORAGE_KEY = "family-dashboard-theme";
 
 export default function FamilyDashboardClient({
   familyMemberName,
+  familyMemberImageUrl,
   lovedOneName,
+  lovedOneImageUrl,
   relationshipLabel,
   urgentCount,
   notifySoonCount,
@@ -199,18 +204,25 @@ export default function FamilyDashboardClient({
             </span>
           </Link>
 
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className={`absolute right-0 inline-flex h-12 w-12 items-center justify-center rounded-xl transition-all duration-200 hover:scale-110 ${
-              isDark
-                ? "bg-zinc-800/80 text-amber-400 hover:bg-zinc-700/80"
-                : "bg-white text-[#a78bfa] shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.1)]"
-            }`}
-            aria-label="Toggle theme"
-          >
-            {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-          </button>
+          <div className="absolute right-0 flex items-center gap-2">
+            <FamilyProfileMenu
+              isDark={isDark}
+              familyMemberName={familyMemberName}
+              familyMemberImageUrl={familyMemberImageUrl}
+            />
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className={`inline-flex h-12 w-12 items-center justify-center rounded-xl transition-all duration-200 hover:scale-110 ${
+                isDark
+                  ? "bg-zinc-800/80 text-amber-400 hover:bg-zinc-700/80"
+                  : "bg-white text-[#a78bfa] shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.1)]"
+              }`}
+              aria-label="Toggle theme"
+            >
+              {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </button>
+          </div>
         </header>
 
         {/* Cards */}
@@ -342,7 +354,11 @@ export default function FamilyDashboardClient({
               className="inline-flex h-12 w-12 overflow-hidden rounded-2xl bg-gradient-to-br from-[#fb923c] to-[#ec4899] p-0.5 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/parent-profile.png" alt={actionCards[3].title} className="h-full w-full rounded-[0.85rem] object-cover" />
+              <img
+                src={lovedOneImageUrl?.trim() || "/parent-profile.png"}
+                alt={actionCards[3].title}
+                className="h-full w-full rounded-[0.85rem] object-cover"
+              />
             </span>
             <div className="flex-1">
               <p className={`text-[1.05rem] font-semibold ${isDark ? "text-zinc-100" : "text-[#1f2937]"}`}>

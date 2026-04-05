@@ -63,7 +63,9 @@ export default async function FamilyDashboardPage() {
     >
       <FamilyDashboardClient
         familyMemberName={profile.familyMemberName || "Family"}
+        familyMemberImageUrl={profile.familyMemberImageUrl}
         lovedOneName={loved}
+        lovedOneImageUrl={profile.lovedOneImageUrl}
         relationshipLabel={profile.relationshipLabel?.trim() || "Loved one"}
         urgentCount={urgentCount}
         notifySoonCount={notifySoonCount}
