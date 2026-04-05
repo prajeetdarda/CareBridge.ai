@@ -306,6 +306,17 @@ CareBridge.ai is built with strong ethical guardrails:
 
 ---
 
+## Future Roadmap
+
+| Feature | Description |
+|---------|-------------|
+| **Care Trend Analytics** | Visual dashboard with mood trends, medication adherence, and activity levels over time — turning stored summary data into actionable charts. |
+| **Wearable / IoT Integration** | Ingest heart rate, step count, and sleep data from smartwatches to enrich Gemini's health analysis beyond conversations. |
+| **Family Group Support** | Multi-member family circles so siblings can share one dashboard, set individual alert preferences, and coordinate care responsibilities. |
+| **Caregiver Handoff Notes** | Local caregivers log visit observations via voice or text, automatically folded into the family dashboard for remote visibility. |
+
+---
+
 ## License
 
 This project was built for [Google AI Hackathon 2026](https://googleai.devpost.com/). All rights reserved.
