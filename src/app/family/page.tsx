@@ -1,7 +1,7 @@
 import Link from "next/link";
-import type { AlertRecord, FamilyProfile, SummaryRecord } from "@/lib/types";
+import type { AlertRecord, FamilyProfile } from "@/lib/types";
 import { getServerBaseUrl } from "@/lib/server-url";
-import SummaryCard from "@/components/dashboard/SummaryCard";
+import FamilyDashboardAttention from "@/components/family/FamilyDashboardAttention";
 
 async function fetchJson<T>(path: string, fallback: T): Promise<T> {
   try {
@@ -15,10 +15,7 @@ async function fetchJson<T>(path: string, fallback: T): Promise<T> {
 }
 
 export default async function FamilyDashboardPage() {
-  const [{ summaries }, { alerts }, { profile }] = await Promise.all([
-    fetchJson<{ summaries: SummaryRecord[] }>("/api/summary", {
-      summaries: [],
-    }),
+  const [{ alerts }, { profile }] = await Promise.all([
     fetchJson<{ alerts: AlertRecord[] }>("/api/alerts", { alerts: [] }),
     fetchJson<{ profile: FamilyProfile }>("/api/settings", {
       profile: {
@@ -33,113 +30,98 @@ export default async function FamilyDashboardPage() {
     }),
   ]);
 
-  const recent = summaries.slice(0, 3);
+  const urgentCount = alerts.filter((a) => a.urgencyLevel === "urgent_now").length;
+  const notifySoonCount = alerts.filter(
+    (a) => a.urgencyLevel === "notify_soon"
+  ).length;
+
   const loved = profile.lovedOneName || "your loved one";
+  const backupContactNames = profile.backupContacts
+    .map((c) => c.name?.trim())
+    .filter((n): n is string => Boolean(n && n.length > 0));
+
+  const alertsLinkBorder =
+    urgentCount > 0
+      ? "border-2 border-danger/45 bg-danger/5"
+      : notifySoonCount > 0
+        ? "border-2 border-amber-500/50 bg-amber-500/5 dark:border-amber-400/45"
+        : "border border-card-border";
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-10 px-6 py-12">
-      <header className="space-y-2">
-        <p className="text-sm text-muted">Family Care Relay</p>
-        <h1 className="text-3xl font-bold tracking-tight">
-          Hi, {profile.familyMemberName || "there"}
-        </h1>
-        <p className="max-w-xl text-muted">
-          Stay in sync with {loved}. Recent check-ins, urgent flags, and your
-          care preferences in one place.
-        </p>
-      </header>
+    <FamilyDashboardAttention
+      urgentCount={urgentCount}
+      notifySoonCount={notifySoonCount}
+      backupContactNames={backupContactNames}
+    >
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-10 px-6 py-12">
+        <header className="space-y-2">
+          <p className="text-sm text-muted">Family Care Relay</p>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Hi, {profile.familyMemberName || "there"}
+          </h1>
+          <p className="max-w-xl text-muted">
+            Stay in sync with {loved}. Recent check-ins, urgent flags, and your
+            care preferences in one place.
+          </p>
+        </header>
 
-      {alerts.length > 0 && (
-        <section
-          className="rounded-xl border-2 border-danger/30 bg-danger/5 p-4"
-          aria-live="polite"
-        >
-          <p className="text-sm font-semibold text-danger">
-            {alerts.length} active alert{alerts.length === 1 ? "" : "s"}
-          </p>
-          <p className="mt-1 text-sm text-muted">
-            Review urgent or &quot;notify soon&quot; items from recent
-            check-ins.
-          </p>
+        <section className="grid gap-3 sm:grid-cols-2">
+          <Link
+            href="/family/summaries"
+            className="flex flex-col gap-1 rounded-xl border border-card-border bg-card p-5 transition-all hover:shadow-md"
+          >
+            <span className="text-xl">📋</span>
+            <span className="font-medium">All summaries</span>
+            <span className="text-xs text-muted">
+              Full history with transcripts
+            </span>
+          </Link>
           <Link
             href="/family/alerts"
-            className="mt-3 inline-block text-sm font-medium text-primary hover:underline"
+            className={`flex flex-col gap-1 rounded-xl ${alertsLinkBorder} bg-card p-5 transition-all hover:shadow-md`}
           >
-            Open alerts →
+            <span className="flex items-center gap-2 text-xl">
+              🚨
+              <span className="flex flex-wrap items-center gap-1.5">
+                {urgentCount > 0 && (
+                  <span className="rounded-full bg-danger/20 px-2 py-0.5 text-xs font-semibold text-danger">
+                    {urgentCount} urgent
+                  </span>
+                )}
+                {notifySoonCount > 0 && (
+                  <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-semibold text-amber-800 dark:text-amber-200">
+                    {notifySoonCount} notify
+                  </span>
+                )}
+              </span>
+            </span>
+            <span className="font-medium">Alerts</span>
+            <span className="text-xs text-muted">Urgent and follow-up flags</span>
+          </Link>
+          <Link
+            href="/family/settings"
+            className="flex flex-col gap-1 rounded-xl border border-card-border bg-card p-5 transition-all hover:shadow-md"
+          >
+            <span className="text-xl">⚙️</span>
+            <span className="font-medium">Care settings</span>
+            <span className="text-xs text-muted">Topics, reminders, contacts</span>
+          </Link>
+          <Link
+            href="/family/check-in"
+            className="flex flex-col gap-1 rounded-xl border-2 border-dashed border-primary bg-primary/5 p-5 transition-all hover:bg-primary/10"
+          >
+            <span className="text-xl">📞</span>
+            <span className="font-medium text-primary">Start check-in</span>
+            <span className="text-xs text-muted">
+              Opens parent incoming in a new tab (demo) or schedule a link
+            </span>
           </Link>
         </section>
-      )}
 
-      <section className="grid gap-3 sm:grid-cols-2">
-        <Link
-          href="/family/summaries"
-          className="flex flex-col gap-1 rounded-xl border border-card-border bg-card p-5 transition-all hover:shadow-md"
-        >
-          <span className="text-xl">📋</span>
-          <span className="font-medium">All summaries</span>
-          <span className="text-xs text-muted">
-            Full history with transcripts
-          </span>
+        <Link href="/" className="text-sm text-muted hover:text-foreground">
+          ← Back to role select
         </Link>
-        <Link
-          href="/family/alerts"
-          className="flex flex-col gap-1 rounded-xl border border-card-border bg-card p-5 transition-all hover:shadow-md"
-        >
-          <span className="text-xl">🚨</span>
-          <span className="font-medium">Alerts</span>
-          <span className="text-xs text-muted">Urgent and follow-up flags</span>
-        </Link>
-        <Link
-          href="/family/settings"
-          className="flex flex-col gap-1 rounded-xl border border-card-border bg-card p-5 transition-all hover:shadow-md"
-        >
-          <span className="text-xl">⚙️</span>
-          <span className="font-medium">Care settings</span>
-          <span className="text-xs text-muted">Topics, reminders, contacts</span>
-        </Link>
-        <Link
-          href="/family/check-in"
-          className="flex flex-col gap-1 rounded-xl border-2 border-dashed border-primary bg-primary/5 p-5 transition-all hover:bg-primary/10"
-        >
-          <span className="text-xl">📞</span>
-          <span className="font-medium text-primary">Start check-in</span>
-          <span className="text-xs text-muted">
-            Opens parent incoming in a new tab (demo) or schedule a link
-          </span>
-        </Link>
-      </section>
-
-      <section className="space-y-4">
-        <div className="flex items-end justify-between gap-4">
-          <h2 className="text-lg font-semibold">Recent summaries</h2>
-          {summaries.length > 3 && (
-            <Link
-              href="/family/summaries"
-              className="text-sm font-medium text-primary hover:underline"
-            >
-              View all
-            </Link>
-          )}
-        </div>
-        {recent.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-card-border bg-card/50 p-8 text-center text-sm text-muted">
-            No check-ins yet. When a call ends or your parent leaves an update,
-            summaries will appear here.
-          </p>
-        ) : (
-          <ul className="space-y-4">
-            {recent.map((s) => (
-              <li key={s.id}>
-                <SummaryCard summary={s} />
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <Link href="/" className="text-sm text-muted hover:text-foreground">
-        ← Back to role select
-      </Link>
-    </main>
+      </main>
+    </FamilyDashboardAttention>
   );
 }

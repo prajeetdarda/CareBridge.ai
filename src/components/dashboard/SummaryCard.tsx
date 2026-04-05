@@ -10,8 +10,12 @@ interface SummaryCardProps {
 
 const urgencyStyles = {
   summary_later: { label: "Summary", bg: "bg-muted/20", text: "text-muted" },
-  notify_soon: { label: "Notify Soon", bg: "bg-accent/20", text: "text-accent" },
-  urgent_now: { label: "Urgent", bg: "bg-danger/20", text: "text-danger" },
+  notify_soon: {
+    label: "Notify soon",
+    bg: "bg-amber-500/20",
+    text: "text-amber-800 dark:text-amber-200",
+  },
+  urgent_now: { label: "Urgent now", bg: "bg-danger/20", text: "text-danger" },
 };
 
 const byLabels: Record<SummaryRecord["initiatedBy"], string> = {

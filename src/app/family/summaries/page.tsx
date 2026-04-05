@@ -1,7 +1,8 @@
 import Link from "next/link";
 import type { SummaryRecord } from "@/lib/types";
 import { getServerBaseUrl } from "@/lib/server-url";
-import SummaryCard from "@/components/dashboard/SummaryCard";
+import { parseSummariesTabParam } from "@/lib/summaries-nav";
+import SummariesExplorer from "@/components/family/SummariesExplorer";
 
 async function fetchSummaries(): Promise<SummaryRecord[]> {
   try {
@@ -15,7 +16,13 @@ async function fetchSummaries(): Promise<SummaryRecord[]> {
   }
 }
 
-export default async function SummariesPage() {
+export default async function SummariesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string | string[] }>;
+}) {
+  const { tab: tabParam } = await searchParams;
+  const initialTab = parseSummariesTabParam(tabParam);
   const summaries = await fetchSummaries();
 
   return (
@@ -35,13 +42,7 @@ export default async function SummariesPage() {
           to see entries here.
         </p>
       ) : (
-        <ul className="space-y-4">
-          {summaries.map((s) => (
-            <li key={s.id}>
-              <SummaryCard summary={s} />
-            </li>
-          ))}
-        </ul>
+        <SummariesExplorer summaries={summaries} initialTab={initialTab} />
       )}
 
       <Link href="/family" className="text-sm text-muted hover:text-foreground">
