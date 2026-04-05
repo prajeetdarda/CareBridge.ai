@@ -259,13 +259,14 @@ export default function UpdatePage() {
         <div className={`${cardSurface} flex flex-col gap-5`}>
           <div className="flex flex-col items-center gap-3">
             <div
-              className="flex h-40 w-40 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#fb923c] to-[#ec4899] shadow-[0_12px_40px_rgba(225,29,72,0.2)] sm:h-48 sm:w-48"
+              className="h-40 w-40 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-[#fb923c] to-[#ec4899] p-1 shadow-[0_12px_40px_rgba(225,29,72,0.2)] sm:h-48 sm:w-48"
               role="img"
               aria-label={
                 caregiverName || parentPrimary(lang, "ariaFamilyProfile")
               }
             >
-              <UserRound className="h-24 w-24 text-white sm:h-28 sm:w-28" strokeWidth={1.25} />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/child-profile.png" alt={caregiverName || "Family"} className="h-full w-full rounded-full object-cover" />
             </div>
             {caregiverName ? (
               <p className="text-center text-lg font-semibold text-zinc-800 sm:text-xl">

@@ -205,16 +205,14 @@ function ParentIncomingInner() {
     () => (
       <div className="flex flex-col items-center gap-2">
         <div
-          className="flex h-44 w-44 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#fb923c] to-[#ec4899] shadow-[0_12px_40px_rgba(225,29,72,0.2)] sm:h-52 sm:w-52"
+          className="h-44 w-44 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-[#fb923c] to-[#ec4899] p-1 shadow-[0_12px_40px_rgba(225,29,72,0.2)] sm:h-52 sm:w-52"
           role="img"
           aria-label={
             caregiverName || parentPrimary(lang, "ariaFamilyCalling")
           }
         >
-          <UserRound
-            className="h-28 w-28 text-white sm:h-32 sm:w-32"
-            strokeWidth={1.25}
-          />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/child-profile.png" alt={caregiverName || "Family"} className="h-full w-full rounded-full object-cover" />
         </div>
         {caregiverName ? (
           <p className="text-center text-lg font-semibold text-zinc-800 sm:text-xl">

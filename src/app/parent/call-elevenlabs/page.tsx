@@ -252,11 +252,12 @@ function ElevenLabsCallInner() {
         <div className="w-full rounded-3xl border border-rose-100/80 bg-white p-6 shadow-[0_10px_30px_rgba(225,29,72,0.08)] sm:p-8">
           <div className="mb-6 flex flex-col items-center gap-3">
             <div
-              className="flex h-40 w-40 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#fb923c] to-[#ec4899] shadow-[0_12px_40px_rgba(225,29,72,0.2)] sm:h-48 sm:w-48"
+              className="h-40 w-40 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-[#fb923c] to-[#ec4899] p-1 shadow-[0_12px_40px_rgba(225,29,72,0.2)] sm:h-48 sm:w-48"
               role="img"
               aria-label={childName}
             >
-              <UserRound className="h-24 w-24 text-white sm:h-28 sm:w-28" strokeWidth={1.25} />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/child-profile.png" alt={childName} className="h-full w-full rounded-full object-cover" />
             </div>
             <p className="text-center text-xl font-semibold text-[#1f2937]">
               {childName}

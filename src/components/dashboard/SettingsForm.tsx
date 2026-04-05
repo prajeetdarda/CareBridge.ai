@@ -30,6 +30,7 @@ export default function SettingsForm({ initial }: SettingsFormProps) {
   const [profile, setProfile] = useState<FamilyProfile>(initial);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState(0);
 
   async function save() {
     setSaving(true);
@@ -144,13 +145,14 @@ export default function SettingsForm({ initial }: SettingsFormProps) {
       <section onPointerMove={handlePointerMove} className={`${cardCls} space-y-5`}>
         <div className="flex flex-col items-center gap-2">
           <div
-            className={`flex h-24 w-24 items-center justify-center rounded-full ${
+            className={`h-24 w-24 overflow-hidden rounded-full p-0.5 ${
               isDark
                 ? "bg-gradient-to-br from-[#fb923c] to-[#ec4899]"
                 : "bg-gradient-to-br from-[#fb923c] to-[#ec4899]"
             }`}
           >
-            <UserRound className="h-12 w-12 text-white" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/parent-profile.png" alt={profile.lovedOneName || "Loved one"} className="h-full w-full rounded-full object-cover" />
           </div>
           <p className={`text-lg font-semibold ${headText}`}>
             {profile.lovedOneName || "Loved one"}
@@ -226,6 +228,43 @@ export default function SettingsForm({ initial }: SettingsFormProps) {
             </button>
           ))}
         </div>
+      </section>
+
+      <section onPointerMove={handlePointerMove} className={`${cardCls} space-y-4`}>
+        <h2 className={`text-base font-semibold ${headText}`}>Medical &amp; info documents</h2>
+        <p className={`text-xs leading-relaxed ${mutedText}`}>
+          Upload prescriptions, medical reports, or any reference files about your loved one.
+          These help caregivers stay informed.
+        </p>
+        <label
+          className={`flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed px-4 py-6 text-center transition-colors ${
+            isDark
+              ? "border-zinc-700 bg-zinc-800/40 hover:border-[#e11d48]/40"
+              : "border-zinc-200 bg-[#f8f4f1]/60 hover:border-[#e11d48]/40"
+          }`}
+        >
+          <span className={`text-2xl ${mutedText}`}>📎</span>
+          <span className={`text-xs font-semibold ${headText}`}>
+            Click to upload or drag &amp; drop
+          </span>
+          <span className={`text-[10px] ${mutedText}`}>
+            PDF, JPG, PNG up to 10 MB
+          </span>
+          <input
+            type="file"
+            multiple
+            accept=".pdf,.jpg,.jpeg,.png"
+            className="hidden"
+            onChange={() => {
+              setUploadedFiles((prev) => prev + 1);
+            }}
+          />
+        </label>
+        {uploadedFiles > 0 && (
+          <p className={`flex items-center gap-1.5 text-xs font-medium ${isDark ? "text-emerald-300" : "text-emerald-600"}`}>
+            <span>✓</span> {uploadedFiles} file{uploadedFiles > 1 ? "s" : ""} selected
+          </p>
+        )}
       </section>
 
       <section onPointerMove={handlePointerMove} className={`${cardCls} space-y-4`}>

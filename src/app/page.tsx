@@ -34,7 +34,7 @@ const AI_TIERS = [
     title: "Daily Digest",
     titleColor: "",
     desc: "Daily highlights and small updates you can review anytime.",
-    triggerColor: "text-[#A38ACD]",
+    triggerColor: "text-[#d36c9c]",
     triggers: ["Positive mood trends", "Routine completion", "Social activity mentions"],
     triggerDot: "bg-green-500",
     footerIcon: "schedule",
@@ -113,18 +113,18 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="landing-body bg-[#FAF5FA] text-[#4A4F5A] selection:bg-[#A38ACD]/20 selection:text-[#A38ACD]">
+    <div className="landing-body bg-[#fff8f4] text-[#31243d] selection:bg-[#d36c9c]/20 selection:text-[#d36c9c]">
       {/* Cursor glow */}
       <div ref={glowRef} className="landing-cursor-glow" />
 
       {/* Floating orbs */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
         <div
-          className="absolute left-[5%] top-[10%] h-96 w-96 rounded-full bg-[#A38ACD]/10 blur-[120px]"
+          className="absolute left-[5%] top-[10%] h-96 w-96 rounded-full bg-[#d36c9c]/10 blur-[120px]"
           style={{ animation: "landing-drift 20s linear infinite" }}
         />
         <div
-          className="absolute bottom-[20%] right-[10%] h-80 w-80 rounded-full bg-[#F3F1F8]/40 blur-[100px]"
+          className="absolute bottom-[20%] right-[10%] h-80 w-80 rounded-full bg-[#fde8ef]/40 blur-[100px]"
           style={{ animation: "landing-drift 20s linear infinite", animationDelay: "-5s" }}
         />
       </div>
@@ -138,30 +138,30 @@ export default function LandingPage() {
         }`}
       >
         <div className="landing-glass mx-8 flex h-20 max-w-7xl items-center justify-between rounded-2xl px-8 shadow-sm xl:mx-auto">
-          <div className="landing-headline text-2xl font-bold tracking-tight text-[#A38ACD]">
+          <div className="landing-headline text-2xl font-bold tracking-tight text-[#d36c9c]">
             CareBridge.ai
           </div>
           <div className="landing-headline hidden items-center space-x-8 text-sm tracking-wide md:flex">
-            <a href="#" className="border-b-2 border-[#A38ACD] font-bold text-[#A38ACD]">
+            <a href="#" className="border-b-2 border-[#d36c9c] font-bold text-[#d36c9c]">
               Home
             </a>
-            <a href="#features" className="text-[#4A4F5A]/70 transition-colors duration-300 hover:text-[#A38ACD]">
+            <a href="#features" className="text-[#31243d]/70 transition-colors duration-300 hover:text-[#d36c9c]">
               Features
             </a>
-            <a href="#intelligence" className="text-[#4A4F5A]/70 transition-colors duration-300 hover:text-[#A38ACD]">
+            <a href="#intelligence" className="text-[#31243d]/70 transition-colors duration-300 hover:text-[#d36c9c]">
               How It Works
             </a>
           </div>
           <div className="flex items-center gap-4">
             <Link
               href="/demo-signup"
-              className="hidden text-sm font-semibold text-[#4A4F5A]/70 transition-colors hover:text-[#4A4F5A] sm:block"
+              className="hidden text-sm font-semibold text-[#31243d]/70 transition-colors hover:text-[#31243d] sm:block"
             >
               Login
             </Link>
             <Link
               href="/demo-signup"
-              className="rounded-xl bg-[#A38ACD] px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-[#A38ACD]/20 transition-all hover:scale-105 active:scale-95"
+              className="rounded-xl bg-[#d36c9c] px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-[#d36c9c]/20 transition-all hover:scale-105 active:scale-95"
             >
               Get Started
             </Link>
@@ -224,22 +224,22 @@ export default function LandingPage() {
 
               {/* Tagline with subtle glass backdrop */}
               <div className="mb-10 inline-block rounded-2xl bg-white/55 px-8 py-5 shadow-lg ring-1 ring-white/30 backdrop-blur-md">
-                <h1 className="landing-headline landing-headline-glow whitespace-nowrap text-2xl font-extrabold leading-snug text-[#4A4F5A] md:text-4xl">
+                <h1 className="landing-headline landing-headline-glow whitespace-nowrap text-2xl font-extrabold leading-snug text-[#31243d] md:text-4xl">
                   Bridging Distance with{" "}
-                  <span className="italic text-[#A38ACD]">Empathetic AI.</span>
+                  <span className="italic text-[#d36c9c]">Empathetic AI.</span>
                 </h1>
               </div>
 
               <div className="mb-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
                 <Link
                   href="/demo-signup"
-                  className="rounded-xl bg-[#A38ACD] px-8 py-4 text-lg font-bold text-white shadow-lg shadow-[#A38ACD]/25 transition-all hover:-translate-y-0.5"
+                  className="rounded-xl bg-[#d36c9c] px-8 py-4 text-lg font-bold text-white shadow-lg shadow-[#d36c9c]/25 transition-all hover:-translate-y-0.5"
                 >
                   Start a Check-In
                 </Link>
                 <a
                   href="#features"
-                  className="landing-glass rounded-xl px-8 py-4 text-lg font-semibold text-[#4A4F5A] transition-colors hover:bg-white/40"
+                  className="landing-glass rounded-xl px-8 py-4 text-lg font-semibold text-[#31243d] transition-colors hover:bg-white/40"
                 >
                   See How It Works
                 </a>
@@ -264,7 +264,7 @@ export default function LandingPage() {
             >
               <div className="group relative">
                 <div
-                  className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl shadow-[0_20px_50px_rgba(163,138,205,0.25)] lg:rotate-1"
+                  className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl shadow-[0_20px_50px_rgba(211,108,156,0.25)] lg:rotate-1"
                   style={{ animation: "landing-float 6s ease-in-out infinite" }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -277,17 +277,17 @@ export default function LandingPage() {
                 </div>
                 {/* Floating status card */}
                 <div
-                  className="landing-glass absolute -bottom-10 -left-12 z-20 max-w-[280px] rounded-2xl p-6 shadow-[0_20px_40px_rgba(0,0,0,0.1),0_0_20px_rgba(163,138,205,0.2)]"
+                  className="landing-glass absolute -bottom-10 -left-12 z-20 max-w-[280px] rounded-2xl p-6 shadow-[0_20px_40px_rgba(0,0,0,0.1),0_0_20px_rgba(211,108,156,0.2)]"
                   style={{ animation: "landing-float 6s ease-in-out infinite", animationDelay: "-2s" }}
                 >
                   <div className="mb-3 flex items-center gap-4">
                     <div className="flex items-center gap-1.5">
                       <MIcon
                         name="fiber_manual_record"
-                        className="text-base text-[#A38ACD]"
+                        className="text-base text-[#d36c9c]"
                         aria-hidden
                       />
-                      <span className="text-sm font-bold text-[#A38ACD]">Gemini Live Active</span>
+                      <span className="text-sm font-bold text-[#d36c9c]">Gemini Live Active</span>
                     </div>
                   </div>
                   <p className="text-sm font-medium leading-relaxed text-[#6B7280]">
@@ -303,13 +303,13 @@ export default function LandingPage() {
         {/* ─── Problem ─── */}
         <section className="landing-reveal bg-white py-32">
           <div className="mx-auto max-w-4xl px-8 text-center">
-            <span className="mb-6 inline-block rounded-full bg-[#F3F1F8] px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#A38ACD]">
+            <span className="mb-6 inline-block rounded-full bg-[#fde8ef] px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#d36c9c]">
               The Challenge
             </span>
             <h2 className="landing-headline mb-4 whitespace-nowrap text-[clamp(1.9rem,4vw,3.75rem)] font-bold leading-tight">
               Caring across borders is hard.
             </h2>
-            <h2 className="landing-headline mb-8 whitespace-nowrap text-[clamp(1.9rem,4vw,3.75rem)] font-bold leading-tight text-[#A38ACD]/70">
+            <h2 className="landing-headline mb-8 whitespace-nowrap text-[clamp(1.9rem,4vw,3.75rem)] font-bold leading-tight text-[#d36c9c]/70">
               Staying informed shouldn&apos;t be.
             </h2>
             <p className="mx-auto max-w-2xl text-xl leading-relaxed text-[#6B7280]">
@@ -326,8 +326,8 @@ export default function LandingPage() {
             <div className="landing-reveal landing-glass group relative overflow-hidden rounded-2xl p-12 shadow-sm md:col-span-7">
               <div className="relative z-10 flex h-full flex-col">
                 <div className="mb-8 flex items-start justify-between">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#A38ACD]/10 transition-transform group-hover:scale-110">
-                    <MIcon name="record_voice_over" className="text-4xl text-[#A38ACD]" />
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#d36c9c]/10 transition-transform group-hover:scale-110">
+                    <MIcon name="record_voice_over" className="text-4xl text-[#d36c9c]" />
                   </div>
                   {/* Transcript widget */}
                   <div className="w-64 rounded-xl border border-white/10 bg-black/80 p-4 shadow-xl backdrop-blur-md">
@@ -367,8 +367,8 @@ export default function LandingPage() {
                     />
                   ))}
                 </div>
-                <div className="mt-auto flex items-center gap-3 border-t border-[#A38ACD]/10 pt-8">
-                  <MIcon name="info" className="text-xl text-[#A38ACD]" />
+                <div className="mt-auto flex items-center gap-3 border-t border-[#d36c9c]/10 pt-8">
+                  <MIcon name="info" className="text-xl text-[#d36c9c]" />
                   <span className="font-medium text-[#6B7280]">
                     No apps to learn. Just natural conversation.
                   </span>
@@ -377,7 +377,7 @@ export default function LandingPage() {
             </div>
 
             {/* Family view */}
-            <div className="landing-reveal flex flex-col justify-between rounded-2xl bg-[#A38ACD] p-12 shadow-lg md:col-span-5">
+            <div className="landing-reveal flex flex-col justify-between rounded-2xl bg-[#d36c9c] p-12 shadow-lg md:col-span-5">
               <div>
                 <div className="mb-8 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10">
                   <MIcon name="family_restroom" className="text-4xl text-white" />
@@ -392,13 +392,13 @@ export default function LandingPage() {
               </div>
               <div className="landing-glass mt-12 rounded-xl p-6">
                 <div className="mb-4 flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#4A4F5A]">TODAY&apos;S STATUS</span>
+                  <span className="text-xs font-bold text-[#31243d]">TODAY&apos;S STATUS</span>
                   <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-xs font-bold uppercase text-green-600">
                     All Good Today
                   </span>
                 </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-[#4A4F5A]/10">
-                  <div className="h-full w-full bg-[#A38ACD]" />
+                <div className="h-1.5 overflow-hidden rounded-full bg-[#31243d]/10">
+                  <div className="h-full w-full bg-[#d36c9c]" />
                 </div>
               </div>
             </div>
@@ -406,7 +406,7 @@ export default function LandingPage() {
         </section>
 
         {/* ─── Safety net ─── */}
-        <section className="landing-reveal overflow-hidden bg-[#FAF5FA] py-24">
+        <section className="landing-reveal overflow-hidden bg-[#fff8f4] py-24">
           <div className="mx-auto max-w-7xl px-8">
             <div className="mb-16 text-center">
               <h2 className="landing-headline mb-4 text-4xl font-bold">
@@ -418,14 +418,14 @@ export default function LandingPage() {
               </p>
             </div>
             <div className="relative flex flex-col items-center justify-between gap-8 md:flex-row">
-              <div className="absolute left-0 top-1/2 hidden h-0.5 w-full -translate-y-1/2 bg-[#A38ACD]/10 md:block" />
+              <div className="absolute left-0 top-1/2 hidden h-0.5 w-full -translate-y-1/2 bg-[#d36c9c]/10 md:block" />
               {ESCALATION_STEPS.map((step) => (
                 <div
                   key={step.label}
                   className="group relative z-10 flex w-full flex-col items-center gap-4 md:w-auto"
                 >
                   <div
-                    className="landing-escalation-node flex h-20 w-20 items-center justify-center rounded-full bg-white text-[#A38ACD] shadow-lg transition-all duration-500"
+                    className="landing-escalation-node flex h-20 w-20 items-center justify-center rounded-full bg-white text-[#d36c9c] shadow-lg transition-all duration-500"
                     style={{ animationDelay: step.delay }}
                   >
                     <MIcon name={step.icon} className="text-3xl" />
@@ -443,7 +443,7 @@ export default function LandingPage() {
         <section id="intelligence" className="landing-reveal landing-mesh-bg py-24">
           <div className="mx-auto max-w-7xl px-8">
             <div className="mb-16">
-              <span className="mb-6 inline-block rounded-full bg-[#A38ACD] px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-white">
+              <span className="mb-6 inline-block rounded-full bg-[#d36c9c] px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-white">
                 AI Intelligence
               </span>
               <h2 className="landing-headline mb-4 text-4xl font-bold leading-tight">
@@ -488,7 +488,7 @@ export default function LandingPage() {
                     </ul>
                   </div>
                   <div
-                    className={`flex items-center gap-2 border-t border-[#A38ACD]/10 pt-6 text-xs font-bold uppercase tracking-widest ${tier.footerColor}`}
+                    className={`flex items-center gap-2 border-t border-[#d36c9c]/10 pt-6 text-xs font-bold uppercase tracking-widest ${tier.footerColor}`}
                   >
                     <MIcon name={tier.footerIcon} className="text-sm" />
                     {tier.footerLabel}
@@ -501,7 +501,7 @@ export default function LandingPage() {
 
         {/* ─── CTA ─── */}
         <section className="landing-reveal px-8 py-24">
-          <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[3rem] bg-[#A38ACD] p-16 text-center md:p-24">
+          <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[3rem] bg-[#d36c9c] p-16 text-center md:p-24">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white/10 to-transparent" />
             <div className="relative z-10">
               <h2 className="landing-headline mb-8 text-4xl font-extrabold leading-tight text-white md:text-6xl">
@@ -512,7 +512,7 @@ export default function LandingPage() {
               </p>
               <Link
                 href="/family/check-in"
-                className="inline-block rounded-2xl bg-white px-12 py-5 text-xl font-bold text-[#A38ACD] shadow-2xl transition-transform hover:scale-105"
+                className="inline-block rounded-2xl bg-white px-12 py-5 text-xl font-bold text-[#d36c9c] shadow-2xl transition-transform hover:scale-105"
               >
                 Start Your First Check-In
               </Link>
@@ -522,7 +522,7 @@ export default function LandingPage() {
       </main>
 
       {/* Powered by */}
-      <div className="border-t border-[#A38ACD]/5 bg-white py-12">
+      <div className="border-t border-[#d36c9c]/5 bg-white py-12">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-center gap-8 px-8 opacity-40 transition-opacity hover:opacity-70 md:flex-row">
           <span className="text-sm font-bold uppercase tracking-[0.2em] text-[#6B7280]">
             Powered by advanced AI voice &amp; intelligence
@@ -538,7 +538,7 @@ export default function LandingPage() {
       <footer className="bg-white pb-12">
         <div className="mx-auto mb-20 grid max-w-7xl grid-cols-1 gap-16 px-8 pt-12 md:grid-cols-2">
           <div>
-            <div className="landing-headline mb-6 text-2xl font-bold text-[#A38ACD]">
+            <div className="landing-headline mb-6 text-2xl font-bold text-[#d36c9c]">
               CareBridge.ai
             </div>
             <p className="max-w-sm text-sm leading-relaxed text-[#6B7280]">
@@ -548,12 +548,12 @@ export default function LandingPage() {
           </div>
           <div className="grid grid-cols-2 gap-8">
             <div className="space-y-4">
-              <h4 className="landing-headline text-sm font-bold text-[#A38ACD]">Product</h4>
+              <h4 className="landing-headline text-sm font-bold text-[#d36c9c]">Product</h4>
               <ul className="space-y-2">
                 <li>
                   <Link
                     href="/parent/update"
-                    className="text-sm text-[#6B7280] transition-colors hover:text-[#A38ACD]"
+                    className="text-sm text-[#6B7280] transition-colors hover:text-[#d36c9c]"
                   >
                     Parent Portal
                   </Link>
@@ -561,7 +561,7 @@ export default function LandingPage() {
                 <li>
                   <Link
                     href="/family"
-                    className="text-sm text-[#6B7280] transition-colors hover:text-[#A38ACD]"
+                    className="text-sm text-[#6B7280] transition-colors hover:text-[#d36c9c]"
                   >
                     Family Dashboard
                   </Link>
@@ -569,15 +569,15 @@ export default function LandingPage() {
               </ul>
             </div>
             <div className="space-y-4">
-              <h4 className="landing-headline text-sm font-bold text-[#A38ACD]">Legal</h4>
+              <h4 className="landing-headline text-sm font-bold text-[#d36c9c]">Legal</h4>
               <ul className="space-y-2">
                 <li>
-                  <a href="#" className="text-sm text-[#6B7280] transition-colors hover:text-[#A38ACD]">
+                  <a href="#" className="text-sm text-[#6B7280] transition-colors hover:text-[#d36c9c]">
                     Privacy Policy
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="text-sm text-[#6B7280] transition-colors hover:text-[#A38ACD]">
+                  <a href="#" className="text-sm text-[#6B7280] transition-colors hover:text-[#d36c9c]">
                     Terms of Service
                   </a>
                 </li>
@@ -585,14 +585,14 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
-        <div className="mx-auto flex max-w-7xl justify-center gap-8 border-t border-[#A38ACD]/5 px-8 pt-8">
-          <a href="#" className="text-[#A38ACD]/40 transition-colors hover:text-[#A38ACD]">
+        <div className="mx-auto flex max-w-7xl justify-center gap-8 border-t border-[#d36c9c]/5 px-8 pt-8">
+          <a href="#" className="text-[#d36c9c]/40 transition-colors hover:text-[#d36c9c]">
             <MIcon name="public" />
           </a>
-          <a href="#" className="text-[#A38ACD]/40 transition-colors hover:text-[#A38ACD]">
+          <a href="#" className="text-[#d36c9c]/40 transition-colors hover:text-[#d36c9c]">
             <MIcon name="share" />
           </a>
-          <a href="#" className="text-[#A38ACD]/40 transition-colors hover:text-[#A38ACD]">
+          <a href="#" className="text-[#d36c9c]/40 transition-colors hover:text-[#d36c9c]">
             <MIcon name="mail" />
           </a>
         </div>

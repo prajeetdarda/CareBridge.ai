@@ -339,9 +339,10 @@ export default function FamilyDashboardClient({
             }`}
           >
             <span
-              className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#fb923c] to-[#ec4899] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6"
+              className="inline-flex h-12 w-12 overflow-hidden rounded-2xl bg-gradient-to-br from-[#fb923c] to-[#ec4899] p-0.5 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6"
             >
-              <UserRound className="h-6 w-6 text-white" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/parent-profile.png" alt={actionCards[3].title} className="h-full w-full rounded-[0.85rem] object-cover" />
             </span>
             <div className="flex-1">
               <p className={`text-[1.05rem] font-semibold ${isDark ? "text-zinc-100" : "text-[#1f2937]"}`}>

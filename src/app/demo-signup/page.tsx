@@ -12,7 +12,7 @@ export default function DemoSignupPage() {
   };
 
   return (
-    <main className="landing-body landing-mesh-bg min-h-screen px-6 py-10 text-[#4A4F5A] md:px-8">
+    <main className="landing-body landing-mesh-bg min-h-screen px-6 py-10 text-[#31243d] md:px-8">
       <div className="mx-auto w-full max-w-3xl">
         <div className="landing-glass rounded-2xl p-8 shadow-xl md:p-10">
           <h1 className="landing-headline mb-3 text-3xl font-extrabold leading-tight md:text-5xl">
@@ -27,7 +27,7 @@ export default function DemoSignupPage() {
                   required
                   type="text"
                   placeholder="e.g. Priya Sharma"
-                  className="w-full rounded-xl border border-white/50 bg-white/80 px-4 py-3 text-sm outline-none transition focus:border-[#A38ACD] focus:ring-2 focus:ring-[#A38ACD]/25"
+                  className="w-full rounded-xl border border-white/50 bg-white/80 px-4 py-3 text-sm outline-none transition focus:border-[#d36c9c] focus:ring-2 focus:ring-[#d36c9c]/25"
                 />
               </label>
               <label className="block">
@@ -36,7 +36,7 @@ export default function DemoSignupPage() {
                   required
                   type="email"
                   placeholder="you@example.com"
-                  className="w-full rounded-xl border border-white/50 bg-white/80 px-4 py-3 text-sm outline-none transition focus:border-[#A38ACD] focus:ring-2 focus:ring-[#A38ACD]/25"
+                  className="w-full rounded-xl border border-white/50 bg-white/80 px-4 py-3 text-sm outline-none transition focus:border-[#d36c9c] focus:ring-2 focus:ring-[#d36c9c]/25"
                 />
               </label>
             </div>
@@ -44,7 +44,7 @@ export default function DemoSignupPage() {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <label className="block">
                 <span className="mb-2 block text-sm font-semibold">Your relationship</span>
-                <select className="w-full rounded-xl border border-white/50 bg-white/80 px-4 py-3 text-sm outline-none transition focus:border-[#A38ACD] focus:ring-2 focus:ring-[#A38ACD]/25">
+                <select className="w-full rounded-xl border border-white/50 bg-white/80 px-4 py-3 text-sm outline-none transition focus:border-[#d36c9c] focus:ring-2 focus:ring-[#d36c9c]/25">
                   <option>Daughter / Son</option>
                   <option>Grandchild</option>
                   <option>Sibling</option>
@@ -53,7 +53,7 @@ export default function DemoSignupPage() {
               </label>
               <label className="block">
                 <span className="mb-2 block text-sm font-semibold">Preferred language</span>
-                <select className="w-full rounded-xl border border-white/50 bg-white/80 px-4 py-3 text-sm outline-none transition focus:border-[#A38ACD] focus:ring-2 focus:ring-[#A38ACD]/25">
+                <select className="w-full rounded-xl border border-white/50 bg-white/80 px-4 py-3 text-sm outline-none transition focus:border-[#d36c9c] focus:ring-2 focus:ring-[#d36c9c]/25">
                   <option>English</option>
                   <option>Hindi</option>
                   <option>Marathi</option>
@@ -67,7 +67,7 @@ export default function DemoSignupPage() {
               <input
                 type="text"
                 placeholder="e.g. Sunita Sharma"
-                className="w-full rounded-xl border border-white/50 bg-white/80 px-4 py-3 text-sm outline-none transition focus:border-[#A38ACD] focus:ring-2 focus:ring-[#A38ACD]/25"
+                className="w-full rounded-xl border border-white/50 bg-white/80 px-4 py-3 text-sm outline-none transition focus:border-[#d36c9c] focus:ring-2 focus:ring-[#d36c9c]/25"
               />
             </label>
 
@@ -76,13 +76,13 @@ export default function DemoSignupPage() {
               <input
                 type="tel"
                 placeholder="+91 98765 43210"
-                className="w-full rounded-xl border border-white/50 bg-white/80 px-4 py-3 text-sm outline-none transition focus:border-[#A38ACD] focus:ring-2 focus:ring-[#A38ACD]/25"
+                className="w-full rounded-xl border border-white/50 bg-white/80 px-4 py-3 text-sm outline-none transition focus:border-[#d36c9c] focus:ring-2 focus:ring-[#d36c9c]/25"
               />
             </label>
 
             <button
               type="submit"
-              className="w-full rounded-xl bg-[#A38ACD] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-[#A38ACD]/30 transition hover:-translate-y-0.5"
+              className="w-full rounded-xl bg-[#d36c9c] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-[#d36c9c]/30 transition hover:-translate-y-0.5"
             >
               Create Demo Account
             </button>
@@ -94,10 +94,10 @@ export default function DemoSignupPage() {
             ) : null}
           </form>
 
-          <div className="mt-10 border-t border-[#A38ACD]/15 pt-6">
+          <div className="mt-10 border-t border-[#d36c9c]/15 pt-6">
             <Link
               href="/family"
-              className="block w-full rounded-xl border border-[#A38ACD]/25 bg-white/60 px-6 py-3 text-center text-sm font-semibold text-[#4A4F5A] transition hover:bg-white"
+              className="block w-full rounded-xl border border-[#d36c9c]/25 bg-white/60 px-6 py-3 text-center text-sm font-semibold text-[#31243d] transition hover:bg-white"
             >
               Skip and continue to Family Dashboard
             </Link>

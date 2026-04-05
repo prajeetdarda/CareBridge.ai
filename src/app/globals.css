@@ -450,34 +450,34 @@ body {
 }
 
 .landing-mesh-bg {
-  background-color: #faf5fa;
+  background-color: #fff8f4;
   background-image: radial-gradient(
       at 0% 0%,
-      hsla(263, 45%, 80%, 0.3) 0px,
+      hsla(340, 50%, 85%, 0.35) 0px,
       transparent 50%
     ),
-    radial-gradient(at 100% 100%, hsla(249, 33%, 96%, 1) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, hsla(25, 60%, 96%, 1) 0px, transparent 50%),
     radial-gradient(
       at 100% 0%,
-      hsla(263, 45%, 80%, 0.2) 0px,
+      hsla(340, 50%, 85%, 0.2) 0px,
       transparent 50%
     );
 }
 
 .landing-headline-glow {
-  text-shadow: 0 4px 12px rgba(163, 138, 205, 0.15);
+  text-shadow: 0 4px 12px rgba(211, 108, 156, 0.15);
 }
 
 .landing-brand-duotone {
   display: inline-block;
-  background-image: linear-gradient(100deg, #9277c1 12%, #7f5cb5 45%, #c97fb9 88%);
+  background-image: linear-gradient(100deg, #d36c9c 12%, #be4b7b 45%, #f09ac2 88%);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
   -webkit-text-fill-color: transparent;
   line-height: 1.14;
   padding-bottom: 0.08em;
-  text-shadow: 0 6px 20px rgba(163, 138, 205, 0.25);
+  text-shadow: 0 6px 20px rgba(211, 108, 156, 0.25);
 }
 
 .landing-brand-care {
@@ -511,7 +511,7 @@ body {
   height: 600px;
   background: radial-gradient(
     circle,
-    rgba(163, 138, 205, 0.1) 0%,
+    rgba(211, 108, 156, 0.1) 0%,
     transparent 70%
   );
   pointer-events: none;
@@ -522,7 +522,7 @@ body {
 
 .landing-waveform-bar {
   width: 4px;
-  background-color: #a38acd;
+  background-color: #d36c9c;
   border-radius: 99px;
   margin: 0 2px;
 }
@@ -612,15 +612,15 @@ body {
   100% {
     transform: scale(1);
     background: #ffffff;
-    color: #a38acd;
-    box-shadow: 0 10px 22px rgba(163, 138, 205, 0.18), 0 0 0 0 rgba(163, 138, 205, 0);
+    color: #d36c9c;
+    box-shadow: 0 10px 22px rgba(211, 108, 156, 0.18), 0 0 0 0 rgba(211, 108, 156, 0);
   }
   12%,
   28% {
     transform: scale(1.1);
-    background: #a38acd;
+    background: #d36c9c;
     color: #ffffff;
-    box-shadow: 0 14px 30px rgba(163, 138, 205, 0.3), 0 0 0 14px rgba(163, 138, 205, 0.16);
+    box-shadow: 0 14px 30px rgba(211, 108, 156, 0.3), 0 0 0 14px rgba(211, 108, 156, 0.16);
   }
 }
 
