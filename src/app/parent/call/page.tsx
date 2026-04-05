@@ -3,10 +3,10 @@
 import { useState, useRef, useCallback, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { PhoneCall, PhoneOff, UserRound } from "lucide-react";
 import {
   parentEnglish,
   parentPrimary,
-  type ParentLang,
 } from "@/lib/parent-i18n";
 import { ParentBilingual, ParentBilingualOnColor } from "@/components/parent/ParentBilingual";
 import { useParentPreferredLanguage } from "@/components/parent/useParentPreferredLanguage";
@@ -15,9 +15,6 @@ import { connectGeminiLive } from "@/lib/gemini";
 import { CALL_START_USER_SIGNAL } from "@/lib/call-prompt";
 import type { AudioCapture, AudioPlayer, AudioChunk } from "@/lib/audio";
 import type { GeminiSession } from "@/lib/gemini";
-
-/** Prevents duplicate auto-start when React Strict Mode runs effects twice. */
-const autostartedGeminiSessions = new Set<string>();
 
 type CallState = "idle" | "connecting" | "active" | "ended";
 
@@ -28,36 +25,31 @@ interface TranscriptEntry {
 }
 
 function LiveCallPageInner() {
-  const { lang } = useParentPreferredLanguage();
+  const { lang, familyMemberName } = useParentPreferredLanguage();
   const searchParams = useSearchParams();
   const handoffSessionId = searchParams.get("session")?.trim() ?? "";
+  const childName = familyMemberName || parentPrimary(lang, "yourFamily");
 
   const [callState, setCallState] = useState<CallState>("idle");
-  const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
-  const [currentAIText, setCurrentAIText] = useState("");
-  const [currentUserText, setCurrentUserText] = useState("");
+  const [, setTranscript] = useState<TranscriptEntry[]>([]);
+  const [, setCurrentAIText] = useState("");
+  const [, setCurrentUserText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [callDuration, setCallDuration] = useState(0);
-  const [debugLogs, setDebugLogs] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
 
   const addLog = useCallback((msg: string) => {
     console.log("[call-debug]", msg);
-    setDebugLogs((prev) => [...prev.slice(-20), `${new Date().toLocaleTimeString()} ${msg}`]);
   }, []);
 
   const sessionRef = useRef<GeminiSession | null>(null);
   const captureRef = useRef<AudioCapture | null>(null);
   const playerRef = useRef<AudioPlayer | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const transcriptEndRef = useRef<HTMLDivElement>(null);
 
   const aiTextBuffer = useRef("");
   const userTextBuffer = useRef("");
   const recordedChunksRef = useRef<AudioChunk[]>([]);
-
-  useEffect(() => {
-    transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [transcript, currentAIText, currentUserText]);
 
   useEffect(() => {
     return () => {
@@ -83,7 +75,6 @@ function LiveCallPageInner() {
     setCurrentAIText("");
     setCurrentUserText("");
     setCallDuration(0);
-    setDebugLogs([]);
     aiTextBuffer.current = "";
     userTextBuffer.current = "";
     recordedChunksRef.current = [];
@@ -222,13 +213,19 @@ function LiveCallPageInner() {
   }, [addLog, handoffSessionId]);
 
   const sessionIdRef = useRef<string>("");
-  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!handoffSessionId) return;
-    if (autostartedGeminiSessions.has(handoffSessionId)) return;
-    autostartedGeminiSessions.add(handoffSessionId);
-    void startCall();
+    // Delay a bit so Strict Mode's transient mount can clean up before
+    // we attempt the real call start on the stable mount.
+    let cancelled = false;
+    const t = window.setTimeout(() => {
+      if (!cancelled) void startCall();
+    }, 80);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t);
+    };
   }, [handoffSessionId, startCall]);
 
   const endCall = useCallback(async () => {
@@ -319,302 +316,129 @@ function LiveCallPageInner() {
   };
 
   return (
-    <main className="flex flex-1 flex-col items-center px-4 py-8 sm:px-6">
-      {/* Header */}
-      <div className="w-full max-w-lg">
-        <Link
-          href="/parent/update"
-          className="text-sm text-muted hover:text-foreground"
-        >
+    <main className="min-h-screen bg-[#f8f4f1] text-zinc-900">
+      <div className="mx-auto flex w-full max-w-xl flex-1 flex-col items-center justify-center px-5 py-8 sm:py-10">
+        <div className="w-full rounded-3xl border border-rose-100/80 bg-white p-6 shadow-[0_10px_30px_rgba(225,29,72,0.08)] sm:p-8">
+          <div className="mb-6 flex flex-col items-center gap-3">
+            <div
+              className="flex h-40 w-40 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#fb923c] to-[#ec4899] shadow-[0_12px_40px_rgba(225,29,72,0.2)] sm:h-48 sm:w-48"
+              role="img"
+              aria-label={childName}
+            >
+              <UserRound className="h-24 w-24 text-white sm:h-28 sm:w-28" strokeWidth={1.25} />
+            </div>
+            <p className="text-center text-xl font-semibold text-[#1f2937]">
+              {childName}
+            </p>
+          </div>
+
+      {callState === "idle" && (
+        <div className="flex flex-col items-center gap-5 text-center">
           <ParentBilingual
             lang={lang}
-            primary={`← ${parentPrimary(lang, "back")}`}
-            english={`← ${parentEnglish("back")}`}
-            align="left"
-            primaryClassName="block"
-            englishClassName="text-xs opacity-80"
+            primary={parentPrimary(lang, "checkInCall")}
+            english={parentEnglish("checkInCall")}
+            primaryClassName="block text-2xl font-semibold text-[#1f2937]"
           />
-        </Link>
-      </div>
-
-      {/* Idle State */}
-      {callState === "idle" && (
-        <div className="flex flex-1 flex-col items-center justify-center gap-6">
-          <div className="flex h-28 w-28 items-center justify-center rounded-full bg-primary/10">
-            <span className="text-6xl">📞</span>
-          </div>
-          {handoffSessionId ? (
-            <>
-              <ParentBilingual
-                lang={lang}
-                primary={parentPrimary(lang, "checkInCall")}
-                english={parentEnglish("checkInCall")}
-                primaryClassName="block text-xl font-bold"
-              />
-              <ParentBilingual
-                lang={lang}
-                primary={parentPrimary(lang, "checkInAutoStart")}
-                english={parentEnglish("checkInAutoStart")}
-                primaryClassName="block max-w-sm text-center text-sm text-muted-foreground"
-                englishClassName="text-xs text-muted-foreground"
-              />
-            </>
-          ) : (
-            <>
-              <ParentBilingual
-                lang={lang}
-                primary={parentPrimary(lang, "liveVoiceDemo")}
-                english={parentEnglish("liveVoiceDemo")}
-                primaryClassName="block text-2xl font-bold"
-              />
-              <ParentBilingual
-                lang={lang}
-                primary={parentPrimary(lang, "testGeminiBlurb")}
-                english={parentEnglish("testGeminiBlurb")}
-                primaryClassName="block max-w-sm text-center text-muted-foreground"
-                englishClassName="text-xs text-muted-foreground"
-              />
-            </>
-          )}
           {error && (
-            <div className="rounded-lg bg-danger/10 px-4 py-3 text-sm text-danger">
+            <div className="w-full rounded-xl bg-[#ffe4e6] px-4 py-3 text-sm text-[#e11d48]">
               {error}
             </div>
           )}
           <button
             onClick={startCall}
-            className="rounded-full bg-success px-10 py-4 text-lg font-semibold text-white shadow-lg transition-all hover:bg-success/90 hover:shadow-xl active:scale-95"
+            className="flex w-full items-center justify-center gap-3 rounded-3xl bg-[#22c55e] py-5 text-2xl font-semibold text-white shadow-[0_10px_28px_rgba(34,197,94,0.3)] transition hover:bg-[#16a34a]"
           >
+            <PhoneCall className="h-8 w-8" />
             <ParentBilingualOnColor
               lang={lang}
-              primary={
-                handoffSessionId
-                  ? parentPrimary(lang, "retryCheckInCall")
-                  : parentPrimary(lang, "startTestCall")
-              }
-              english={
-                handoffSessionId
-                  ? parentEnglish("retryCheckInCall")
-                  : parentEnglish("startTestCall")
-              }
-              primaryClassName="block text-lg font-semibold"
+              primary={parentPrimary(lang, "accept")}
+              english={parentEnglish("accept")}
+              primaryClassName="block text-2xl font-semibold"
             />
           </button>
         </div>
       )}
 
-      {/* Connecting State */}
       {callState === "connecting" && (
-        <div className="flex flex-1 flex-col items-center justify-center gap-6">
-          <div className="flex h-28 w-28 animate-pulse items-center justify-center rounded-full bg-primary/20">
-            <span className="text-6xl">📡</span>
-          </div>
+        <div className="flex flex-col items-center gap-4 text-center">
+          <div className="h-14 w-14 animate-spin rounded-full border-4 border-[#e11d48]/30 border-t-[#e11d48]" />
           <ParentBilingual
             lang={lang}
             primary={parentPrimary(lang, "connecting")}
             english={parentEnglish("connecting")}
-            primaryClassName="block text-xl font-semibold"
-          />
-          <ParentBilingual
-            lang={lang}
-            primary={parentPrimary(lang, "settingUpSession")}
-            english={parentEnglish("settingUpSession")}
-            primaryClassName="block text-sm text-muted-foreground"
-            englishClassName="text-xs text-muted-foreground"
+            primaryClassName="block text-2xl font-semibold text-[#1f2937]"
           />
         </div>
       )}
 
-      {/* Active Call State */}
       {callState === "active" && (
-        <div className="flex w-full max-w-lg flex-1 flex-col gap-4 pt-4">
-          {/* Call header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-success/20">
-                <span className="text-2xl">🎙️</span>
-                <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 animate-pulse rounded-full bg-success" />
-              </div>
-              <div>
-                <ParentBilingual
-                  lang={lang}
-                  primary={parentPrimary(lang, "liveCallActive")}
-                  english={parentEnglish("liveCallActive")}
-                  primaryClassName="block font-semibold"
-                  align="left"
-                  englishClassName="text-xs text-muted-foreground"
-                />
-                <p className="text-sm text-muted">
-                  {formatDuration(callDuration)}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={endCall}
-              className="rounded-full bg-danger px-6 py-2.5 font-medium text-white transition-colors hover:bg-danger/80"
-            >
-              <ParentBilingualOnColor
-                lang={lang}
-                primary={parentPrimary(lang, "endCall")}
-                english={parentEnglish("endCall")}
-                primaryClassName="block font-medium"
-              />
-            </button>
-          </div>
-
+        <div className="flex flex-col items-center gap-6 text-center">
+          <ParentBilingual
+            lang={lang}
+            primary={parentPrimary(lang, "liveCallActive")}
+            english={parentEnglish("liveCallActive")}
+            primaryClassName="block text-2xl font-semibold text-[#1f2937]"
+          />
+          <p className="text-6xl font-mono font-bold tabular-nums text-[#1f2937]">
+            {formatDuration(callDuration)}
+          </p>
           {error && (
-            <div className="rounded-lg bg-danger/10 px-4 py-3 text-sm text-danger">
+            <div className="w-full rounded-xl bg-[#ffe4e6] px-4 py-3 text-sm text-[#e11d48]">
               {error}
             </div>
           )}
-
-          {/* Transcript */}
-          <div className="flex flex-1 flex-col gap-3 overflow-y-auto rounded-xl border border-card-border bg-card p-4">
-            {transcript.length === 0 && !currentAIText && !currentUserText && (
-              <ParentBilingual
-                lang={lang}
-                primary={parentPrimary(lang, "assistantSpeaksFirst")}
-                english={parentEnglish("assistantSpeaksFirst")}
-                primaryClassName="block text-center text-sm text-muted-foreground"
-                englishClassName="text-xs text-muted-foreground"
-              />
-            )}
-
-            {transcript.map((entry, i) => (
-              <TranscriptBubble key={i} entry={entry} lang={lang} />
-            ))}
-
-            {currentUserText && (
-              <TranscriptBubble
-                entry={{
-                  role: "user",
-                  text: currentUserText,
-                  timestamp: new Date(),
-                }}
-                isPartial
-                lang={lang}
-              />
-            )}
-
-            {currentAIText && (
-              <TranscriptBubble
-                entry={{
-                  role: "ai",
-                  text: currentAIText,
-                  timestamp: new Date(),
-                }}
-                isPartial
-                lang={lang}
-              />
-            )}
-
-            <div ref={transcriptEndRef} />
-          </div>
+          <button
+            onClick={endCall}
+            className="flex w-full items-center justify-center gap-3 rounded-3xl bg-[#e11d48] py-5 text-2xl font-semibold text-white shadow-[0_10px_28px_rgba(225,29,72,0.3)] transition hover:bg-[#be123c]"
+          >
+            <PhoneOff className="h-8 w-8" />
+            <ParentBilingualOnColor
+              lang={lang}
+              primary={parentPrimary(lang, "endCall")}
+              english={parentEnglish("endCall")}
+              primaryClassName="block text-2xl font-semibold"
+            />
+          </button>
         </div>
       )}
 
-      {/* Ended State */}
       {callState === "ended" && (
-        <div className="flex w-full max-w-lg flex-1 flex-col gap-6 pt-4">
-          <div className="text-center">
+        <div className="flex flex-col items-center gap-5 text-center">
+          <ParentBilingual
+            lang={lang}
+            primary={parentPrimary(lang, "callEnded")}
+            english={parentEnglish("callEnded")}
+            primaryClassName="block text-2xl font-semibold text-[#1f2937]"
+          />
+          <p className="text-base text-[#6b7280]">
+            {parentPrimary(lang, "duration")}: {formatDuration(callDuration)}
+          </p>
+          {saving ? (
             <ParentBilingual
               lang={lang}
-              primary={parentPrimary(lang, "callEnded")}
-              english={parentEnglish("callEnded")}
-              primaryClassName="block text-2xl font-bold"
+              primary={parentPrimary(lang, "savingRecording")}
+              english={parentEnglish("savingRecording")}
+              primaryClassName="block text-sm text-[#6b7280]"
+              englishClassName="text-xs text-[#9ca3af]"
             />
-            <p className="text-muted-foreground">
-              {parentPrimary(lang, "duration")}: {formatDuration(callDuration)}
-              {lang !== "en" ? (
-                <span className="mt-0.5 block text-xs text-muted-foreground">
-                  ({parentEnglish("duration")}: {formatDuration(callDuration)})
-                </span>
-              ) : null}
-            </p>
-            {saving && (
-              <ParentBilingual
-                lang={lang}
-                primary={parentPrimary(lang, "savingRecording")}
-                english={parentEnglish("savingRecording")}
-                primaryClassName="mt-2 block animate-pulse text-sm text-primary"
-                englishClassName="text-xs text-muted-foreground"
-              />
-            )}
-          </div>
-
-          {/* Full transcript */}
-          <div className="flex flex-1 flex-col gap-3 overflow-y-auto rounded-xl border border-card-border bg-card p-4">
-            <ParentBilingual
-              lang={lang}
-              primary={parentPrimary(lang, "fullTranscript")}
-              english={parentEnglish("fullTranscript")}
-              align="left"
-              primaryClassName="block text-sm font-semibold text-muted-foreground"
-              englishClassName="text-xs text-muted-foreground"
-            />
-            {transcript.length === 0 ? (
-              <ParentBilingual
-                lang={lang}
-                primary={parentPrimary(lang, "noTranscript")}
-                english={parentEnglish("noTranscript")}
-                align="left"
-                primaryClassName="block text-sm text-muted-foreground"
-                englishClassName="text-xs text-muted-foreground"
-              />
-            ) : (
-              transcript.map((entry, i) => (
-                <TranscriptBubble key={i} entry={entry} lang={lang} />
-              ))
-            )}
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              onClick={() => {
-                setCallState("idle");
-                setError(null);
-              }}
-              className="flex-1 rounded-xl bg-primary px-6 py-3 font-medium text-white transition-colors hover:bg-primary-light"
+          ) : (
+            <Link
+              href="/parent/update"
+              className="flex w-full items-center justify-center rounded-3xl bg-[#e11d48] py-5 text-xl font-semibold text-white shadow-[0_10px_28px_rgba(225,29,72,0.3)] transition hover:bg-[#be123c]"
             >
               <ParentBilingualOnColor
                 lang={lang}
-                primary={parentPrimary(lang, "startAnotherCall")}
-                english={parentEnglish("startAnotherCall")}
-                primaryClassName="block font-medium"
-              />
-            </button>
-            <Link
-              href="/parent/update"
-              className="flex-1 rounded-xl border border-card-border bg-card px-6 py-3 text-center font-medium transition-colors hover:bg-background"
-            >
-              <ParentBilingual
-                lang={lang}
                 primary={parentPrimary(lang, "backToHome")}
                 english={parentEnglish("backToHome")}
-                primaryClassName="block font-medium"
-                englishClassName="text-xs text-muted-foreground"
+                primaryClassName="block text-xl font-semibold"
               />
             </Link>
-          </div>
+          )}
         </div>
       )}
-      {/* Debug Logs */}
-      {debugLogs.length > 0 && (
-        <div className="mt-4 w-full max-w-lg">
-          <details className="rounded-lg border border-card-border bg-card">
-            <summary className="cursor-pointer px-4 py-2 text-xs font-medium text-muted">
-              Debug Logs ({debugLogs.length})
-            </summary>
-            <div className="max-h-40 overflow-y-auto px-4 pb-3">
-              {debugLogs.map((log, i) => (
-                <p key={i} className="font-mono text-[10px] text-muted">
-                  {log}
-                </p>
-              ))}
-            </div>
-          </details>
         </div>
-      )}
+      </div>
     </main>
   );
 }
@@ -639,46 +463,5 @@ export default function LiveCallPage() {
     <Suspense fallback={<CallPageLoadingFallback />}>
       <LiveCallPageInner />
     </Suspense>
-  );
-}
-
-function TranscriptBubble({
-  entry,
-  isPartial = false,
-  lang,
-}: {
-  entry: TranscriptEntry;
-  isPartial?: boolean;
-  lang: ParentLang;
-}) {
-  const isAI = entry.role === "ai";
-  const rolePrimary = isAI
-    ? parentPrimary(lang, "aiAssistant")
-    : parentPrimary(lang, "you");
-  const roleEnglish = isAI
-    ? parentEnglish("aiAssistant")
-    : parentEnglish("you");
-  const partialPrimary = isPartial ? parentPrimary(lang, "speaking") : "";
-  const partialEnglish = isPartial ? parentEnglish("speaking") : "";
-  return (
-    <div className={`flex ${isAI ? "justify-start" : "justify-end"}`}>
-      <div
-        className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-          isAI
-            ? "bg-primary/10 text-foreground"
-            : "bg-foreground/10 text-foreground"
-        } ${isPartial ? "opacity-60" : ""}`}
-      >
-        <div className="mb-1 text-xs font-medium text-muted-foreground">
-          <span className="block">{rolePrimary}{isPartial ? ` ${partialPrimary}` : ""}</span>
-          {lang !== "en" ? (
-            <span className="block text-[10px] opacity-80">
-              ({roleEnglish}{isPartial ? ` ${partialEnglish}` : ""})
-            </span>
-          ) : null}
-        </div>
-        {entry.text}
-      </div>
-    </div>
   );
 }

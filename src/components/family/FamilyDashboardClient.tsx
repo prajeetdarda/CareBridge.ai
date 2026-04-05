@@ -82,7 +82,12 @@ export default function FamilyDashboardClient({
         title: "Needs Attention",
         subtitle:
           totalAttention > 0
-            ? `${totalAttention} urgent reminder${totalAttention > 1 ? "s" : ""}`
+            ? [
+                urgentCount > 0 ? `${urgentCount} urgent` : "",
+                notifySoonCount > 0 ? `${notifySoonCount} follow-up` : "",
+              ]
+                .filter(Boolean)
+                .join(", ")
             : "No active alerts",
         cta: "Review alerts",
       },
@@ -94,7 +99,7 @@ export default function FamilyDashboardClient({
         cta: "Open profile",
       },
     ],
-    [lovedOneName, totalAttention]
+    [lovedOneName, totalAttention, urgentCount, notifySoonCount]
   );
 
   function toggleTheme() {
@@ -279,9 +284,14 @@ export default function FamilyDashboardClient({
                 }`}
               >
                 <Bell className="h-5 w-5" />
-                {totalAttention > 0 && (
+                {urgentCount > 0 && (
                   <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#e11d48] text-[10px] font-bold text-white">
-                    {totalAttention}
+                    {urgentCount}
+                  </span>
+                )}
+                {notifySoonCount > 0 && (
+                  <span className={`absolute ${urgentCount > 0 ? "-bottom-1" : "-right-1 -top-1"} -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#f59e0b] text-[10px] font-bold text-white`}>
+                    {notifySoonCount}
                   </span>
                 )}
               </span>
@@ -297,7 +307,23 @@ export default function FamilyDashboardClient({
                   isDark ? "text-zinc-400" : "text-[#6b7280]"
                 }`}
               >
-                {actionCards[2].subtitle}
+                {totalAttention > 0 ? (
+                  <>
+                    {urgentCount > 0 && (
+                      <span className="font-medium text-[#e11d48]">
+                        {urgentCount} urgent
+                      </span>
+                    )}
+                    {urgentCount > 0 && notifySoonCount > 0 && ", "}
+                    {notifySoonCount > 0 && (
+                      <span className="font-medium text-[#f59e0b]">
+                        {notifySoonCount} follow-up
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  "No active alerts"
+                )}
               </p>
             </Link>
           </div>

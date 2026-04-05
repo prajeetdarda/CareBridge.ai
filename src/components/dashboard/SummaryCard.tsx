@@ -3,7 +3,6 @@
 import { useState } from "react";
 import {
   Activity,
-  Brain,
   Heart,
   Moon as MoonIcon,
   Phone,
@@ -30,7 +29,7 @@ const urgencyStyles = {
 const sourceLabels: Record<SummaryRecord["initiatedBy"], { label: string; Icon: typeof Phone }> = {
   family: { label: "Check-in call", Icon: Phone },
   loved_one: { label: "Update", Icon: Upload },
-  ai_agent: { label: "AI check-in", Icon: Brain },
+  ai_agent: { label: "Check-in call", Icon: Phone },
 };
 
 const TOPIC_DETECTORS: { keyword: RegExp; label: string; Icon: typeof Pill; color: string; darkColor: string }[] = [

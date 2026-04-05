@@ -55,25 +55,25 @@ export default function SummariesExplorer({
     [summaries, range]
   );
 
+  const isCall = (s: SummaryRecord) =>
+    s.initiatedBy === "family" || s.initiatedBy === "ai_agent";
+
   const filtered = useMemo(() => {
     if (tab === "calls") {
-      return inRangeSummaries.filter(
-        (s) => s.initiatedBy === "family" || s.initiatedBy === "ai_agent"
-      );
+      return inRangeSummaries.filter(isCall);
     }
     const level = TAB_URGENCY[tab];
-    return inRangeSummaries.filter((s) => s.urgencyLevel === level);
+    return inRangeSummaries.filter((s) => s.urgencyLevel === level && !isCall(s));
   }, [inRangeSummaries, tab]);
 
   const counts = useMemo(() => {
-    const calls = inRangeSummaries.filter(
-      (s) => s.initiatedBy === "family" || s.initiatedBy === "ai_agent"
-    ).length;
+    const callItems = inRangeSummaries.filter(isCall);
+    const nonCallItems = inRangeSummaries.filter((s) => !isCall(s));
     return {
-      calls,
-      later: inRangeSummaries.filter((s) => s.urgencyLevel === "summary_later").length,
-      notify: inRangeSummaries.filter((s) => s.urgencyLevel === "notify_soon").length,
-      urgent: inRangeSummaries.filter((s) => s.urgencyLevel === "urgent_now").length,
+      calls: callItems.length,
+      later: nonCallItems.filter((s) => s.urgencyLevel === "summary_later").length,
+      notify: nonCallItems.filter((s) => s.urgencyLevel === "notify_soon").length,
+      urgent: nonCallItems.filter((s) => s.urgencyLevel === "urgent_now").length,
     };
   }, [inRangeSummaries]);
 

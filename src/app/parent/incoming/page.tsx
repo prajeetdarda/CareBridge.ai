@@ -178,6 +178,7 @@ function ParentIncomingInner() {
   }, []);
 
   const answer = useCallback(() => {
+    setAlreadyAnswered(true);
     setSilenced(false);
     stopRinging();
     try {

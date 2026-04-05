@@ -92,10 +92,7 @@ export async function connectGeminiLive(
     },
     sendText: (text: string) => {
       try {
-        session.sendClientContent({
-          turns: [{ role: "user", parts: [{ text }] }],
-          turnComplete: true,
-        });
+        session.sendRealtimeInput({ text });
       } catch (e) {
         console.error("[gemini] Failed to send text:", e);
       }
