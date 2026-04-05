@@ -7,7 +7,17 @@
  */
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import Link from "next/link";
+import {
+  AlertTriangle,
+  Camera,
+  Mic,
+  Square,
+  UserRound,
+  Video,
+} from "lucide-react";
+import { parentEnglish, parentPrimary } from "@/lib/parent-i18n";
+import { ParentBilingual, ParentBilingualOnColor } from "@/components/parent/ParentBilingual";
+import { useParentPreferredLanguage } from "@/components/parent/useParentPreferredLanguage";
 
 type Screen =
   | "home"
@@ -27,9 +37,12 @@ function blobToBase64(blob: Blob): Promise<string> {
 }
 
 export default function UpdatePage() {
+  const { lang, familyMemberName } = useParentPreferredLanguage();
+  const caregiverName = familyMemberName.trim();
   const [screen, setScreen] = useState<Screen>("home");
   const [recordSeconds, setRecordSeconds] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
+  const [errorEnglishHint, setErrorEnglishHint] = useState("");
 
   const audioRecorderRef = useRef<MediaRecorder | null>(null);
   const videoRecorderRef = useRef<MediaRecorder | null>(null);
@@ -61,6 +74,7 @@ export default function UpdatePage() {
     micStreamRef.current = null;
     setRecordSeconds(0);
     setErrorMsg("");
+    setErrorEnglishHint("");
     sessionIdRef.current = crypto.randomUUID();
     setScreen("home");
   }, [stopCamStream]);
@@ -75,6 +89,10 @@ export default function UpdatePage() {
 
   const formatTime = (s: number) =>
     `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
+
+  const pageShell = "mx-auto flex w-full max-w-xl flex-1 flex-col px-5 py-6 sm:py-8";
+  const cardSurface =
+    "rounded-3xl border border-rose-100/80 bg-white p-5 shadow-[0_10px_30px_rgba(225,29,72,0.08)]";
 
   const submit = useCallback(
     async (blob: Blob, mimeType: string) => {
@@ -93,7 +111,9 @@ export default function UpdatePage() {
           body: JSON.stringify({ sessionId, mediaBase64: base64, mimeType }),
         });
         const saveData = await saveRes.json();
-        if (!saveRes.ok) throw new Error(saveData.error || "Save failed");
+        if (!saveRes.ok) {
+          throw new Error(saveData.error || "Save failed");
+        }
 
         await fetch("/api/summary", {
           method: "POST",
@@ -109,13 +129,14 @@ export default function UpdatePage() {
 
         reset();
       } catch (e) {
-        setErrorMsg(
-          e instanceof Error ? e.message : "Something went wrong. Please try again."
+        setErrorMsg(parentPrimary(lang, "genericTryAgain"));
+        setErrorEnglishHint(
+          e instanceof Error ? e.message : parentEnglish("genericTryAgain")
         );
         setScreen("error");
       }
     },
-    [reset]
+    [reset, lang]
   );
 
   // ── VOICE ──────────────────────────────────────────────────────────────────
@@ -145,12 +166,11 @@ export default function UpdatePage() {
       setScreen("voice-recording");
       timerRef.current = setInterval(() => setRecordSeconds((s) => s + 1), 1000);
     } catch {
-      setErrorMsg(
-        "Could not access microphone. Please allow microphone permission and try again."
-      );
+      setErrorMsg(parentPrimary(lang, "micPermissionError"));
+      setErrorEnglishHint(parentEnglish("micPermissionError"));
       setScreen("error");
     }
-  }, [submit]);
+  }, [submit, lang]);
 
   const stopVoice = useCallback(() => {
     clearTimer();
@@ -174,12 +194,11 @@ export default function UpdatePage() {
         }
       }, 100);
     } catch {
-      setErrorMsg(
-        "Could not access camera. Please allow camera permission and try again."
-      );
+      setErrorMsg(parentPrimary(lang, "cameraPermissionError"));
+      setErrorEnglishHint(parentEnglish("cameraPermissionError"));
       setScreen("error");
     }
-  }, []);
+  }, [lang]);
 
   const takePhoto = useCallback(() => {
     const video = liveVideoRef.current;
@@ -235,68 +254,145 @@ export default function UpdatePage() {
 
   if (screen === "home")
     return (
-      <main className="flex flex-1 flex-col items-center justify-center gap-6 px-6 py-10">
-        <Link
-          href="/"
-          className="self-start text-sm text-muted hover:text-foreground"
-        >
-          &larr; Back to role select
-        </Link>
-        <h1 className="text-4xl font-bold text-center">Leave a Message</h1>
-        <div className="flex w-full max-w-sm flex-col gap-5 mt-4">
+      <main className="min-h-screen bg-[#f8f4f1] text-zinc-900">
+        <div className={pageShell}>
+        <div className={`${cardSurface} flex flex-col gap-5`}>
+          <div className="flex flex-col items-center gap-3">
+            <div
+              className="flex h-40 w-40 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#fb923c] to-[#ec4899] shadow-[0_12px_40px_rgba(225,29,72,0.2)] sm:h-48 sm:w-48"
+              role="img"
+              aria-label={
+                caregiverName || parentPrimary(lang, "ariaFamilyProfile")
+              }
+            >
+              <UserRound className="h-24 w-24 text-white sm:h-28 sm:w-28" strokeWidth={1.25} />
+            </div>
+            {caregiverName ? (
+              <p className="text-center text-lg font-semibold text-zinc-800 sm:text-xl">
+                {caregiverName}
+              </p>
+            ) : (
+              <ParentBilingual
+                lang={lang}
+                primary={parentPrimary(lang, "yourFamily")}
+                english={parentEnglish("yourFamily")}
+                primaryClassName="block text-lg font-semibold text-zinc-800 sm:text-xl"
+              />
+            )}
+          </div>
+          <ParentBilingual
+            lang={lang}
+            primary={parentPrimary(lang, "shareUpdate")}
+            english={parentEnglish("shareUpdate")}
+            primaryClassName="block text-xl font-semibold tracking-tight text-zinc-800 sm:text-2xl"
+          />
+          <ParentBilingual
+            lang={lang}
+            primary={parentPrimary(lang, "chooseOption")}
+            english={parentEnglish("chooseOption")}
+            primaryClassName="block text-base text-zinc-700"
+            englishClassName="text-sm text-zinc-500"
+          />
           <button
             type="button"
             onClick={startVoice}
-            className="flex flex-col items-center justify-center gap-4 rounded-3xl bg-primary py-12 text-white shadow-xl transition-transform active:scale-95"
+            className="grid min-h-32 w-full grid-cols-4 items-center gap-0 rounded-3xl bg-[#e11d48] py-4 pl-2 pr-5 text-white sm:min-h-36 sm:py-5"
           >
-            <span className="text-7xl">🎤</span>
-            <span className="text-3xl font-bold tracking-wide">VOICE</span>
+            <span className="col-span-1 flex items-center justify-center" aria-hidden>
+              <Mic className="h-16 w-16 shrink-0 sm:h-20 sm:w-20" strokeWidth={1.75} />
+            </span>
+            <span className="col-span-3 flex items-center justify-center px-1 text-center">
+              <ParentBilingualOnColor
+                lang={lang}
+                primary={parentPrimary(lang, "voiceMessage")}
+                english={parentEnglish("voiceMessage")}
+                primaryClassName="block text-2xl font-semibold leading-tight sm:text-[1.65rem]"
+              />
+            </span>
           </button>
           <button
             type="button"
             onClick={openCamera}
-            className="flex flex-col items-center justify-center gap-4 rounded-3xl bg-accent py-12 text-white shadow-xl transition-transform active:scale-95"
+            className="grid min-h-32 w-full grid-cols-4 items-center gap-0 rounded-3xl bg-[#a78bfa] py-4 pl-2 pr-5 text-white sm:min-h-36 sm:py-5"
           >
-            <span className="text-7xl">📷</span>
-            <span className="text-3xl font-bold tracking-wide">CAMERA</span>
+            <span className="col-span-1 flex items-center justify-center" aria-hidden>
+              <Camera className="h-16 w-16 shrink-0 sm:h-20 sm:w-20" strokeWidth={1.75} />
+            </span>
+            <span className="col-span-3 flex items-center justify-center px-1 text-center">
+              <ParentBilingualOnColor
+                lang={lang}
+                primary={parentPrimary(lang, "photoOrVideo")}
+                english={parentEnglish("photoOrVideo")}
+                primaryClassName="block text-2xl font-semibold leading-tight sm:text-[1.65rem]"
+              />
+            </span>
           </button>
+        </div>
         </div>
       </main>
     );
 
   if (screen === "voice-recording")
     return (
-      <main className="flex flex-1 flex-col items-center justify-center gap-8 px-6">
-        <p className="text-2xl font-semibold text-muted">Recording…</p>
-        <p className="text-sm text-muted text-center max-w-xs">
-          Tap stop when finished — your message sends right away.
-        </p>
+      <main className="min-h-screen bg-[#f8f4f1] text-zinc-900">
+        <div className={`${pageShell} items-center justify-center`}>
+          <div className={`${cardSurface} flex w-full flex-col items-center gap-6`}>
+        <ParentBilingual
+          lang={lang}
+          primary={parentPrimary(lang, "recording")}
+          english={parentEnglish("recording")}
+          primaryClassName="block text-2xl font-semibold text-zinc-700"
+        />
         <button
           type="button"
           onClick={stopVoice}
-          className="relative flex h-52 w-52 items-center justify-center rounded-full bg-danger shadow-2xl transition-transform active:scale-95"
+          className="flex h-48 w-48 items-center justify-center rounded-full bg-[#e11d48] text-white shadow-[0_14px_35px_rgba(225,29,72,0.3)]"
         >
-          <span className="absolute inset-0 rounded-full bg-danger animate-ping opacity-30" />
-          <span className="text-8xl">🎤</span>
+          <Mic className="h-20 w-20" />
         </button>
-        <p className="text-5xl font-mono font-bold">{formatTime(recordSeconds)}</p>
+        <p className="text-5xl font-mono font-bold text-zinc-800">{formatTime(recordSeconds)}</p>
         <button
           type="button"
           onClick={stopVoice}
-          className="rounded-full border-4 border-danger px-12 py-4 text-2xl font-bold text-danger transition-transform active:scale-95"
+          className="rounded-full border-2 border-[#e11d48] px-10 py-4 text-2xl font-bold text-[#e11d48]"
         >
-          Stop &amp; send
+          <ParentBilingual
+            lang={lang}
+            primary={parentPrimary(lang, "stopAndSend")}
+            english={parentEnglish("stopAndSend")}
+            primaryClassName="block"
+            align="center"
+            englishClassName="text-sm text-[#e11d48]/75"
+          />
         </button>
+          </div>
+        </div>
       </main>
     );
 
   if (screen === "camera-live" || screen === "camera-recording") {
     const isRecording = screen === "camera-recording";
     return (
-      <main className="flex flex-1 flex-col items-center gap-4 px-6 py-4 pb-8">
+      <main className="min-h-screen bg-[#f8f4f1] text-zinc-900">
+        <div className={`${pageShell} gap-4`}>
+        <div className="mb-1">
+          <ParentBilingual
+            lang={lang}
+            primary={
+              isRecording
+                ? parentPrimary(lang, "recordingVideo")
+                : parentPrimary(lang, "cameraReady")
+            }
+            english={
+              isRecording
+                ? parentEnglish("recordingVideo")
+                : parentEnglish("cameraReady")
+            }
+            primaryClassName="block text-center text-xl font-semibold text-zinc-700"
+          />
+        </div>
         {/* Capped preview so Photo / Video stay on screen without scrolling */}
-        <div className="relative h-[min(42vh,360px)] w-full max-w-md shrink-0 overflow-hidden rounded-2xl bg-black shadow-lg">
-          {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+        <div className="relative h-[min(42vh,360px)] w-full overflow-hidden rounded-2xl bg-black shadow-lg">
           <video
             ref={liveVideoRef}
             autoPlay
@@ -308,7 +404,7 @@ export default function UpdatePage() {
           {isRecording && (
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-4">
               <div className="flex items-center gap-3 rounded-full bg-black/50 px-6 py-3">
-                <span className="h-4 w-4 animate-pulse rounded-full bg-danger" />
+                <span className="h-4 w-4 rounded-full bg-[#e11d48]" />
                 <span className="font-mono text-2xl font-bold text-white sm:text-3xl">
                   {formatTime(recordSeconds)}
                 </span>
@@ -319,34 +415,55 @@ export default function UpdatePage() {
 
         <canvas ref={canvasRef} className="hidden" />
 
-        <div className="flex w-full max-w-sm shrink-0 gap-4">
+        <div className="flex w-full shrink-0 gap-4">
           {!isRecording ? (
             <>
               <button
                 type="button"
                 onClick={takePhoto}
-                className="flex flex-1 flex-col items-center justify-center gap-2 rounded-3xl bg-accent py-6 text-white shadow-xl transition-transform active:scale-95"
+                className="flex flex-1 flex-col items-center justify-center gap-2 rounded-3xl bg-[#a78bfa] py-6 text-white shadow-[0_10px_25px_rgba(167,139,250,0.35)]"
               >
-                <span className="text-5xl">📸</span>
-                <span className="text-xl font-bold">Photo</span>
+                <Camera className="h-8 w-8" />
+                <span className="text-center">
+                  <ParentBilingualOnColor
+                    lang={lang}
+                    primary={parentPrimary(lang, "takePhoto")}
+                    english={parentEnglish("takePhoto")}
+                    primaryClassName="block text-xl font-bold"
+                  />
+                </span>
               </button>
               <button
                 type="button"
                 onClick={startVideoRecord}
-                className="flex flex-1 flex-col items-center justify-center gap-2 rounded-3xl bg-danger py-6 text-white shadow-xl transition-transform active:scale-95"
+                className="flex flex-1 flex-col items-center justify-center gap-2 rounded-3xl bg-[#e11d48] py-6 text-white shadow-[0_10px_25px_rgba(225,29,72,0.35)]"
               >
-                <span className="text-5xl">🎬</span>
-                <span className="text-xl font-bold">Video</span>
+                <Video className="h-8 w-8" />
+                <span className="text-center">
+                  <ParentBilingualOnColor
+                    lang={lang}
+                    primary={parentPrimary(lang, "recordVideo")}
+                    english={parentEnglish("recordVideo")}
+                    primaryClassName="block text-xl font-bold"
+                  />
+                </span>
               </button>
             </>
           ) : (
             <button
               type="button"
               onClick={stopVideoRecord}
-              className="flex flex-1 flex-col items-center justify-center gap-2 rounded-3xl bg-danger py-6 text-white shadow-xl transition-transform active:scale-95"
+              className="flex flex-1 flex-col items-center justify-center gap-2 rounded-3xl bg-[#e11d48] py-6 text-white shadow-[0_10px_25px_rgba(225,29,72,0.35)]"
             >
-              <span className="text-5xl">⏹️</span>
-              <span className="text-xl font-bold">Stop &amp; send</span>
+              <Square className="h-8 w-8" />
+              <span className="text-center">
+                <ParentBilingualOnColor
+                  lang={lang}
+                  primary={parentPrimary(lang, "stopAndSend")}
+                  english={parentEnglish("stopAndSend")}
+                  primaryClassName="block text-xl font-bold"
+                />
+              </span>
             </button>
           )}
         </div>
@@ -358,37 +475,74 @@ export default function UpdatePage() {
               stopCamStream();
               setScreen("home");
             }}
-            className="shrink-0 text-lg text-muted hover:text-foreground"
+            className="shrink-0 rounded-full border border-zinc-300 bg-white px-5 py-2 text-lg text-zinc-700"
           >
-            Cancel
+            <ParentBilingual
+              lang={lang}
+              primary={parentPrimary(lang, "cancel")}
+              english={parentEnglish("cancel")}
+              primaryClassName="block text-lg font-medium text-zinc-700"
+              englishClassName="text-xs text-zinc-500"
+            />
           </button>
         )}
+        </div>
       </main>
     );
   }
 
   if (screen === "sending")
     return (
-      <main className="flex flex-1 flex-col items-center justify-center gap-6 px-6">
-        <div className="h-24 w-24 animate-spin rounded-full border-8 border-primary border-t-transparent" />
-        <p className="text-xl font-semibold text-muted">Sending…</p>
+      <main className="min-h-screen bg-[#f8f4f1] text-zinc-900">
+        <div className={`${pageShell} items-center justify-center`}>
+          <div className={`${cardSurface} w-full text-center`}>
+        <ParentBilingual
+          lang={lang}
+          primary={parentPrimary(lang, "sendingUpdate")}
+          english={parentEnglish("sendingUpdate")}
+          primaryClassName="block text-xl font-semibold text-zinc-700"
+        />
+        <ParentBilingual
+          lang={lang}
+          primary={parentPrimary(lang, "pleaseWait")}
+          english={parentEnglish("pleaseWait")}
+          primaryClassName="mt-2 block text-base text-zinc-600"
+          englishClassName="text-sm text-zinc-500"
+        />
+          </div>
+        </div>
       </main>
     );
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-8 px-6">
-      <span className="text-8xl">⚠️</span>
-      <p className="text-2xl font-bold text-center text-danger">
-        Something went wrong
-      </p>
-      <p className="text-lg text-muted text-center max-w-xs">{errorMsg}</p>
+    <main className="min-h-screen bg-[#f8f4f1] text-zinc-900">
+      <div className={`${pageShell} items-center justify-center`}>
+        <div className={`${cardSurface} flex w-full flex-col items-center gap-5 text-center`}>
+      <AlertTriangle className="h-14 w-14 text-[#e11d48]" />
+      {lang === "en" ? (
+        <p className="max-w-sm text-2xl font-bold text-[#e11d48]">{errorMsg}</p>
+      ) : (
+        <>
+          <p className="max-w-sm text-2xl font-bold text-zinc-800">{errorMsg}</p>
+          {errorEnglishHint ? (
+            <p className="max-w-sm text-sm text-zinc-500">({errorEnglishHint})</p>
+          ) : null}
+        </>
+      )}
       <button
         type="button"
         onClick={reset}
-        className="rounded-3xl bg-primary py-6 px-12 text-2xl font-bold text-white shadow-xl transition-transform active:scale-95"
+        className="rounded-full bg-[#e11d48] px-10 py-4 text-2xl font-bold text-white"
       >
-        Try again
+        <ParentBilingualOnColor
+          lang={lang}
+          primary={parentPrimary(lang, "tryAgain")}
+          english={parentEnglish("tryAgain")}
+          primaryClassName="block text-2xl font-bold"
+        />
       </button>
+        </div>
+      </div>
     </main>
   );
 }

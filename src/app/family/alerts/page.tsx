@@ -1,7 +1,7 @@
-import Link from "next/link";
 import type { AlertRecord } from "@/lib/types";
 import { getServerBaseUrl } from "@/lib/server-url";
 import AlertCard from "@/components/dashboard/AlertCard";
+import CarePageShell from "@/components/family/CarePageShell";
 
 async function fetchAlerts(): Promise<AlertRecord[]> {
   try {
@@ -19,22 +19,18 @@ export default async function AlertsPage() {
   const alerts = await fetchAlerts();
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-12">
-      <div>
-        <h1 className="text-2xl font-bold">Urgent alerts</h1>
-        <p className="mt-2 max-w-xl text-sm text-muted">
-          Items that need attention soon or right now. Acknowledge when
-          you&apos;ve followed up so they clear from this list.
-        </p>
-      </div>
-
+    <CarePageShell pageTitle="Needs Attention">
       {alerts.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-card-border bg-card/50 p-10 text-center text-sm text-muted">
-          No active alerts. When a check-in is classified as notify-soon or
-          urgent, it will show up here.
-        </p>
+        <div className="rounded-[1.25rem] border border-dashed border-zinc-200/60 bg-white p-10 text-center shadow-[0_2px_20px_rgba(0,0,0,0.04)]">
+          <p className="text-base font-semibold text-[#1f2937]">
+            All clear right now
+          </p>
+          <p className="mx-auto mt-2 max-w-xl text-sm text-[#6b7280]">
+            No active alerts. Future follow-up or urgent items will appear here.
+          </p>
+        </div>
       ) : (
-        <ul className="space-y-4">
+        <ul className="space-y-3">
           {alerts.map((a) => (
             <li key={a.id}>
               <AlertCard alert={a} />
@@ -42,10 +38,6 @@ export default async function AlertsPage() {
           ))}
         </ul>
       )}
-
-      <Link href="/family" className="text-sm text-muted hover:text-foreground">
-        ← Back to dashboard
-      </Link>
-    </main>
+    </CarePageShell>
   );
 }

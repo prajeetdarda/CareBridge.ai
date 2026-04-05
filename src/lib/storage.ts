@@ -25,6 +25,7 @@ const PENDING_CALLS_PATH = path.join(DB_DIR, "pending_calls.json");
 const defaultProfile: FamilyProfile = {
   familyMemberName: "Anjali",
   lovedOneName: "Amma",
+  lovedOneDateOfBirth: "",
   preferredLanguage: "hi",
   relationshipLabel: "daughter",
   careTopics: ["medication", "food", "activity", "mood"],

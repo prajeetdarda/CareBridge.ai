@@ -15,6 +15,8 @@ export type CallVoiceProvider = "gemini" | "elevenlabs";
 export interface FamilyProfile {
   familyMemberName: string;
   lovedOneName: string;
+  /** ISO date YYYY-MM-DD for age on dashboard */
+  lovedOneDateOfBirth?: string;
   preferredLanguage: string;
   relationshipLabel: string;
   careTopics: string[];
@@ -128,6 +130,7 @@ export interface CreateAlertRequest {
 export interface UpdateSettingsRequest {
   familyMemberName?: string;
   lovedOneName?: string;
+  lovedOneDateOfBirth?: string;
   preferredLanguage?: string;
   relationshipLabel?: string;
   careTopics?: string[];

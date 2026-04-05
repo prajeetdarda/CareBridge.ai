@@ -3,6 +3,13 @@
 import { useState, useRef, useCallback, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import {
+  parentEnglish,
+  parentPrimary,
+  type ParentLang,
+} from "@/lib/parent-i18n";
+import { ParentBilingual, ParentBilingualOnColor } from "@/components/parent/ParentBilingual";
+import { useParentPreferredLanguage } from "@/components/parent/useParentPreferredLanguage";
 import { createAudioCapture, createAudioPlayer } from "@/lib/audio";
 import { connectGeminiLive } from "@/lib/gemini";
 import { CALL_START_USER_SIGNAL } from "@/lib/call-prompt";
@@ -21,6 +28,7 @@ interface TranscriptEntry {
 }
 
 function LiveCallPageInner() {
+  const { lang } = useParentPreferredLanguage();
   const searchParams = useSearchParams();
   const handoffSessionId = searchParams.get("session")?.trim() ?? "";
 
@@ -55,7 +63,6 @@ function LiveCallPageInner() {
     return () => {
       cleanup();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function cleanup() {
@@ -319,7 +326,14 @@ function LiveCallPageInner() {
           href="/parent/update"
           className="text-sm text-muted hover:text-foreground"
         >
-          &larr; Back
+          <ParentBilingual
+            lang={lang}
+            primary={`← ${parentPrimary(lang, "back")}`}
+            english={`← ${parentEnglish("back")}`}
+            align="left"
+            primaryClassName="block"
+            englishClassName="text-xs opacity-80"
+          />
         </Link>
       </div>
 
@@ -331,18 +345,35 @@ function LiveCallPageInner() {
           </div>
           {handoffSessionId ? (
             <>
-              <h1 className="text-xl font-bold">Check-in call</h1>
-              <p className="max-w-sm text-center text-sm text-muted">
-                The call should start automatically after you answer. If it
-                didn&apos;t, tap retry.
-              </p>
+              <ParentBilingual
+                lang={lang}
+                primary={parentPrimary(lang, "checkInCall")}
+                english={parentEnglish("checkInCall")}
+                primaryClassName="block text-xl font-bold"
+              />
+              <ParentBilingual
+                lang={lang}
+                primary={parentPrimary(lang, "checkInAutoStart")}
+                english={parentEnglish("checkInAutoStart")}
+                primaryClassName="block max-w-sm text-center text-sm text-muted-foreground"
+                englishClassName="text-xs text-muted-foreground"
+              />
             </>
           ) : (
             <>
-              <h1 className="text-2xl font-bold">Live Voice Demo</h1>
-              <p className="max-w-sm text-center text-muted">
-                Test the AI care assistant with Gemini Live — tap below to start.
-              </p>
+              <ParentBilingual
+                lang={lang}
+                primary={parentPrimary(lang, "liveVoiceDemo")}
+                english={parentEnglish("liveVoiceDemo")}
+                primaryClassName="block text-2xl font-bold"
+              />
+              <ParentBilingual
+                lang={lang}
+                primary={parentPrimary(lang, "testGeminiBlurb")}
+                english={parentEnglish("testGeminiBlurb")}
+                primaryClassName="block max-w-sm text-center text-muted-foreground"
+                englishClassName="text-xs text-muted-foreground"
+              />
             </>
           )}
           {error && (
@@ -354,7 +385,20 @@ function LiveCallPageInner() {
             onClick={startCall}
             className="rounded-full bg-success px-10 py-4 text-lg font-semibold text-white shadow-lg transition-all hover:bg-success/90 hover:shadow-xl active:scale-95"
           >
-            {handoffSessionId ? "Retry check-in call" : "Start Test Call"}
+            <ParentBilingualOnColor
+              lang={lang}
+              primary={
+                handoffSessionId
+                  ? parentPrimary(lang, "retryCheckInCall")
+                  : parentPrimary(lang, "startTestCall")
+              }
+              english={
+                handoffSessionId
+                  ? parentEnglish("retryCheckInCall")
+                  : parentEnglish("startTestCall")
+              }
+              primaryClassName="block text-lg font-semibold"
+            />
           </button>
         </div>
       )}
@@ -365,10 +409,19 @@ function LiveCallPageInner() {
           <div className="flex h-28 w-28 animate-pulse items-center justify-center rounded-full bg-primary/20">
             <span className="text-6xl">📡</span>
           </div>
-          <h2 className="text-xl font-semibold">Connecting...</h2>
-          <p className="text-sm text-muted">
-            Setting up secure voice session
-          </p>
+          <ParentBilingual
+            lang={lang}
+            primary={parentPrimary(lang, "connecting")}
+            english={parentEnglish("connecting")}
+            primaryClassName="block text-xl font-semibold"
+          />
+          <ParentBilingual
+            lang={lang}
+            primary={parentPrimary(lang, "settingUpSession")}
+            english={parentEnglish("settingUpSession")}
+            primaryClassName="block text-sm text-muted-foreground"
+            englishClassName="text-xs text-muted-foreground"
+          />
         </div>
       )}
 
@@ -383,7 +436,14 @@ function LiveCallPageInner() {
                 <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 animate-pulse rounded-full bg-success" />
               </div>
               <div>
-                <p className="font-semibold">Live Call Active</p>
+                <ParentBilingual
+                  lang={lang}
+                  primary={parentPrimary(lang, "liveCallActive")}
+                  english={parentEnglish("liveCallActive")}
+                  primaryClassName="block font-semibold"
+                  align="left"
+                  englishClassName="text-xs text-muted-foreground"
+                />
                 <p className="text-sm text-muted">
                   {formatDuration(callDuration)}
                 </p>
@@ -393,7 +453,12 @@ function LiveCallPageInner() {
               onClick={endCall}
               className="rounded-full bg-danger px-6 py-2.5 font-medium text-white transition-colors hover:bg-danger/80"
             >
-              End Call
+              <ParentBilingualOnColor
+                lang={lang}
+                primary={parentPrimary(lang, "endCall")}
+                english={parentEnglish("endCall")}
+                primaryClassName="block font-medium"
+              />
             </button>
           </div>
 
@@ -406,13 +471,17 @@ function LiveCallPageInner() {
           {/* Transcript */}
           <div className="flex flex-1 flex-col gap-3 overflow-y-auto rounded-xl border border-card-border bg-card p-4">
             {transcript.length === 0 && !currentAIText && !currentUserText && (
-              <p className="text-center text-sm text-muted">
-                The assistant speaks first — then you can reply in any language you prefer...
-              </p>
+              <ParentBilingual
+                lang={lang}
+                primary={parentPrimary(lang, "assistantSpeaksFirst")}
+                english={parentEnglish("assistantSpeaksFirst")}
+                primaryClassName="block text-center text-sm text-muted-foreground"
+                englishClassName="text-xs text-muted-foreground"
+              />
             )}
 
             {transcript.map((entry, i) => (
-              <TranscriptBubble key={i} entry={entry} />
+              <TranscriptBubble key={i} entry={entry} lang={lang} />
             ))}
 
             {currentUserText && (
@@ -423,6 +492,7 @@ function LiveCallPageInner() {
                   timestamp: new Date(),
                 }}
                 isPartial
+                lang={lang}
               />
             )}
 
@@ -434,6 +504,7 @@ function LiveCallPageInner() {
                   timestamp: new Date(),
                 }}
                 isPartial
+                lang={lang}
               />
             )}
 
@@ -446,27 +517,53 @@ function LiveCallPageInner() {
       {callState === "ended" && (
         <div className="flex w-full max-w-lg flex-1 flex-col gap-6 pt-4">
           <div className="text-center">
-            <h2 className="text-2xl font-bold">Call Ended</h2>
-            <p className="text-muted">
-              Duration: {formatDuration(callDuration)}
+            <ParentBilingual
+              lang={lang}
+              primary={parentPrimary(lang, "callEnded")}
+              english={parentEnglish("callEnded")}
+              primaryClassName="block text-2xl font-bold"
+            />
+            <p className="text-muted-foreground">
+              {parentPrimary(lang, "duration")}: {formatDuration(callDuration)}
+              {lang !== "en" ? (
+                <span className="mt-0.5 block text-xs text-muted-foreground">
+                  ({parentEnglish("duration")}: {formatDuration(callDuration)})
+                </span>
+              ) : null}
             </p>
             {saving && (
-              <p className="mt-2 animate-pulse text-sm text-primary">
-                Saving recording & transcript...
-              </p>
+              <ParentBilingual
+                lang={lang}
+                primary={parentPrimary(lang, "savingRecording")}
+                english={parentEnglish("savingRecording")}
+                primaryClassName="mt-2 block animate-pulse text-sm text-primary"
+                englishClassName="text-xs text-muted-foreground"
+              />
             )}
           </div>
 
           {/* Full transcript */}
           <div className="flex flex-1 flex-col gap-3 overflow-y-auto rounded-xl border border-card-border bg-card p-4">
-            <h3 className="text-sm font-semibold text-muted">
-              Full Transcript
-            </h3>
+            <ParentBilingual
+              lang={lang}
+              primary={parentPrimary(lang, "fullTranscript")}
+              english={parentEnglish("fullTranscript")}
+              align="left"
+              primaryClassName="block text-sm font-semibold text-muted-foreground"
+              englishClassName="text-xs text-muted-foreground"
+            />
             {transcript.length === 0 ? (
-              <p className="text-sm text-muted">No transcript recorded.</p>
+              <ParentBilingual
+                lang={lang}
+                primary={parentPrimary(lang, "noTranscript")}
+                english={parentEnglish("noTranscript")}
+                align="left"
+                primaryClassName="block text-sm text-muted-foreground"
+                englishClassName="text-xs text-muted-foreground"
+              />
             ) : (
               transcript.map((entry, i) => (
-                <TranscriptBubble key={i} entry={entry} />
+                <TranscriptBubble key={i} entry={entry} lang={lang} />
               ))
             )}
           </div>
@@ -479,13 +576,24 @@ function LiveCallPageInner() {
               }}
               className="flex-1 rounded-xl bg-primary px-6 py-3 font-medium text-white transition-colors hover:bg-primary-light"
             >
-              Start Another Call
+              <ParentBilingualOnColor
+                lang={lang}
+                primary={parentPrimary(lang, "startAnotherCall")}
+                english={parentEnglish("startAnotherCall")}
+                primaryClassName="block font-medium"
+              />
             </button>
             <Link
               href="/parent/update"
               className="flex-1 rounded-xl border border-card-border bg-card px-6 py-3 text-center font-medium transition-colors hover:bg-background"
             >
-              Back to Home
+              <ParentBilingual
+                lang={lang}
+                primary={parentPrimary(lang, "backToHome")}
+                english={parentEnglish("backToHome")}
+                primaryClassName="block font-medium"
+                englishClassName="text-xs text-muted-foreground"
+              />
             </Link>
           </div>
         </div>
@@ -511,15 +619,24 @@ function LiveCallPageInner() {
   );
 }
 
+function CallPageLoadingFallback() {
+  const { lang } = useParentPreferredLanguage();
+  return (
+    <main className="flex flex-1 flex-col items-center justify-center px-4 py-12">
+      <ParentBilingual
+        lang={lang}
+        primary={parentPrimary(lang, "loading")}
+        english={parentEnglish("loading")}
+        primaryClassName="block text-muted-foreground"
+        englishClassName="text-xs text-muted-foreground"
+      />
+    </main>
+  );
+}
+
 export default function LiveCallPage() {
   return (
-    <Suspense
-      fallback={
-        <main className="flex flex-1 flex-col items-center justify-center px-4 py-12">
-          <p className="text-muted">Loading…</p>
-        </main>
-      }
-    >
+    <Suspense fallback={<CallPageLoadingFallback />}>
       <LiveCallPageInner />
     </Suspense>
   );
@@ -528,11 +645,21 @@ export default function LiveCallPage() {
 function TranscriptBubble({
   entry,
   isPartial = false,
+  lang,
 }: {
   entry: TranscriptEntry;
   isPartial?: boolean;
+  lang: ParentLang;
 }) {
   const isAI = entry.role === "ai";
+  const rolePrimary = isAI
+    ? parentPrimary(lang, "aiAssistant")
+    : parentPrimary(lang, "you");
+  const roleEnglish = isAI
+    ? parentEnglish("aiAssistant")
+    : parentEnglish("you");
+  const partialPrimary = isPartial ? parentPrimary(lang, "speaking") : "";
+  const partialEnglish = isPartial ? parentEnglish("speaking") : "";
   return (
     <div className={`flex ${isAI ? "justify-start" : "justify-end"}`}>
       <div
@@ -542,10 +669,14 @@ function TranscriptBubble({
             : "bg-foreground/10 text-foreground"
         } ${isPartial ? "opacity-60" : ""}`}
       >
-        <p className="mb-1 text-xs font-medium text-muted">
-          {isAI ? "AI Assistant" : "You"}
-          {isPartial && " (speaking...)"}
-        </p>
+        <div className="mb-1 text-xs font-medium text-muted-foreground">
+          <span className="block">{rolePrimary}{isPartial ? ` ${partialPrimary}` : ""}</span>
+          {lang !== "en" ? (
+            <span className="block text-[10px] opacity-80">
+              ({roleEnglish}{isPartial ? ` ${partialEnglish}` : ""})
+            </span>
+          ) : null}
+        </div>
         {entry.text}
       </div>
     </div>

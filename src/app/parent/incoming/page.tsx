@@ -5,14 +5,19 @@ import {
   useRef,
   useEffect,
   useCallback,
+  useMemo,
   Suspense,
 } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
+import { Phone, PhoneOff, UserRound } from "lucide-react";
 import type {
   CallVoiceProvider,
   GetIncomingStatusResponse,
 } from "@/lib/types";
+import { parentEnglish, parentLocaleTag, parentPrimary } from "@/lib/parent-i18n";
+import { ParentBilingual, ParentBilingualOnColor } from "@/components/parent/ParentBilingual";
+import { useParentPreferredLanguage } from "@/components/parent/useParentPreferredLanguage";
 
 const voiceStorageKey = (sid: string) => `fc_relay_voice_${sid}`;
 
@@ -30,7 +35,14 @@ function playBeep(ctx: AudioContext) {
   osc.stop(ctx.currentTime + 0.28);
 }
 
+const shell =
+  "mx-auto flex w-full max-w-xl flex-1 flex-col items-center justify-center px-5 py-8 sm:py-10";
+const cardSurface =
+  "w-full max-w-md rounded-3xl border border-rose-100/80 bg-white p-8 shadow-[0_10px_30px_rgba(225,29,72,0.08)]";
+
 function ParentIncomingInner() {
+  const { lang, familyMemberName } = useParentPreferredLanguage();
+  const caregiverName = familyMemberName.trim();
   const searchParams = useSearchParams();
   const router = useRouter();
   const sessionId = searchParams.get("session")?.trim() ?? "";
@@ -45,13 +57,6 @@ function ParentIncomingInner() {
     useState<CallVoiceProvider>("gemini");
   const [answeredVoice, setAnsweredVoice] =
     useState<CallVoiceProvider>("gemini");
-  /**
-   * True once Web Audio is actually running (or unsupported — we skip the hint).
-   * Browsers usually start AudioContext "suspended" until a user gesture; we try
-   * auto-resume when ringing, then show a tap fallback only if still blocked.
-   */
-  const [audioUnlocked, setAudioUnlocked] = useState(false);
-  const [showAudioHint, setShowAudioHint] = useState(false);
 
   const audioCtxRef = useRef<AudioContext | null>(null);
   const ringIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -65,21 +70,19 @@ function ParentIncomingInner() {
 
   useEffect(() => {
     if (!sessionId) return;
-    try {
-      if (sessionStorage.getItem(answeredKey(sessionId)) === "1") {
-        setAlreadyAnswered(true);
-        const v = sessionStorage.getItem(voiceStorageKey(sessionId));
-        if (v === "elevenlabs" || v === "gemini") {
-          setAnsweredVoice(v);
+    queueMicrotask(() => {
+      try {
+        if (sessionStorage.getItem(answeredKey(sessionId)) === "1") {
+          setAlreadyAnswered(true);
+          const v = sessionStorage.getItem(voiceStorageKey(sessionId));
+          if (v === "elevenlabs" || v === "gemini") {
+            setAnsweredVoice(v);
+          }
         }
+      } catch {
+        // ignore
       }
-    } catch {
-      // ignore
-    }
-  }, [sessionId]);
-
-  useEffect(() => {
-    setAudioUnlocked(false);
+    });
   }, [sessionId]);
 
   const unlockRingAudio = useCallback(async () => {
@@ -89,7 +92,6 @@ function ParentIncomingInner() {
         (window as unknown as { webkitAudioContext?: typeof AudioContext })
           .webkitAudioContext);
     if (!Ctx) {
-      setAudioUnlocked(true);
       return;
     }
     try {
@@ -100,27 +102,16 @@ function ParentIncomingInner() {
       await ctx.resume();
       if (ctx.state === "running") {
         playBeep(ctx);
-        setAudioUnlocked(true);
       }
     } catch {
       // still suspended until user gesture
     }
   }, []);
 
-  /** Try to start the ringtone without a tap (works only in permissive cases). */
   useEffect(() => {
     if (phase !== "ringing" || silenced) return;
     void unlockRingAudio();
   }, [phase, silenced, unlockRingAudio]);
-
-  useEffect(() => {
-    if (phase !== "ringing" || silenced || audioUnlocked) {
-      setShowAudioHint(false);
-      return;
-    }
-    const id = window.setTimeout(() => setShowAudioHint(true), 500);
-    return () => window.clearTimeout(id);
-  }, [phase, silenced, audioUnlocked]);
 
   useEffect(() => {
     if (!sessionId || alreadyAnswered) return;
@@ -204,74 +195,158 @@ function ParentIncomingInner() {
     setSilenced(true);
   }, [stopRinging]);
 
+  const onAccept = useCallback(() => {
+    void unlockRingAudio();
+    answer();
+  }, [unlockRingAudio, answer]);
+
+  const profileBlock = useMemo(
+    () => (
+      <div className="flex flex-col items-center gap-2">
+        <div
+          className="flex h-44 w-44 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#fb923c] to-[#ec4899] shadow-[0_12px_40px_rgba(225,29,72,0.2)] sm:h-52 sm:w-52"
+          role="img"
+          aria-label={
+            caregiverName || parentPrimary(lang, "ariaFamilyCalling")
+          }
+        >
+          <UserRound
+            className="h-28 w-28 text-white sm:h-32 sm:w-32"
+            strokeWidth={1.25}
+          />
+        </div>
+        {caregiverName ? (
+          <p className="text-center text-lg font-semibold text-zinc-800 sm:text-xl">
+            {caregiverName}
+          </p>
+        ) : null}
+      </div>
+    ),
+    [lang, caregiverName]
+  );
+
   if (!sessionId) {
     return (
-      <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-6">
-        <p className="text-muted">Missing session. Use the link from the family check-in page.</p>
-        <Link href="/parent/update" className="text-primary underline">
-          Leave a message
-        </Link>
+      <main className="min-h-screen bg-[#f8f4f1] text-zinc-900">
+        <div className={shell}>
+          <div className={`${cardSurface} flex flex-col items-center gap-6 text-center`}>
+            {profileBlock}
+            <Link
+              href="/parent/update"
+              className="flex w-full flex-col items-center justify-center rounded-3xl bg-[#e11d48] py-5 text-xl font-semibold text-white"
+            >
+              <ParentBilingualOnColor
+                lang={lang}
+                primary={parentPrimary(lang, "update")}
+                english={parentEnglish("update")}
+                primaryClassName="block text-xl font-semibold"
+              />
+            </Link>
+          </div>
+        </div>
       </main>
     );
   }
 
   if (alreadyAnswered) {
     return (
-      <main className="flex min-h-[60vh] flex-col items-center justify-center gap-6 px-6 text-center">
-        <p className="text-muted">You already answered this check-in.</p>
-        <Link
-          href={`${callPathForVoice(answeredVoice)}?session=${encodeURIComponent(sessionId)}`}
-          className="rounded-full bg-primary px-8 py-3 font-semibold text-white"
-        >
-          Open call again
-        </Link>
-        <button
-          type="button"
-          className="text-sm text-muted underline"
-          onClick={() => {
-            try {
-              sessionStorage.removeItem(answeredKey(sessionId));
-              sessionStorage.removeItem(voiceStorageKey(sessionId));
-            } catch {
-              // ignore
-            }
-            setAlreadyAnswered(false);
-            setPhase(null);
-          }}
-        >
-          Wait for another ring (same link)
-        </button>
-        <Link href="/parent/update" className="text-sm text-primary">
-          Leave a message
-        </Link>
+      <main className="min-h-screen bg-[#f8f4f1] text-zinc-900">
+        <div className={shell}>
+          <div className={`${cardSurface} flex flex-col items-center gap-6`}>
+            {profileBlock}
+            <Link
+              href={`${callPathForVoice(answeredVoice)}?session=${encodeURIComponent(sessionId)}`}
+              className="flex w-full flex-col items-center justify-center gap-2 rounded-3xl bg-[#22c55e] py-6 text-2xl font-semibold text-white sm:flex-row sm:gap-3"
+            >
+              <Phone className="h-8 w-8 shrink-0" strokeWidth={2} />
+              <ParentBilingualOnColor
+                lang={lang}
+                primary={parentPrimary(lang, "accept")}
+                english={parentEnglish("accept")}
+                primaryClassName="block text-2xl font-semibold"
+              />
+            </Link>
+            <button
+              type="button"
+              className="w-full rounded-3xl border-2 border-zinc-200 bg-white py-4 text-base font-medium text-zinc-600"
+              onClick={() => {
+                try {
+                  sessionStorage.removeItem(answeredKey(sessionId));
+                  sessionStorage.removeItem(voiceStorageKey(sessionId));
+                } catch {
+                  // ignore
+                }
+                setAlreadyAnswered(false);
+                setPhase(null);
+              }}
+            >
+              <ParentBilingual
+                lang={lang}
+                primary={parentPrimary(lang, "waitNextCall")}
+                english={parentEnglish("waitNextCall")}
+                primaryClassName="block text-base font-medium text-zinc-700"
+                englishClassName="text-xs text-zinc-500"
+              />
+            </button>
+          </div>
+        </div>
       </main>
     );
   }
 
   if (phase === "gone") {
     return (
-      <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-6 text-center">
-        <p className="text-muted">This check-in link is no longer active or expired.</p>
-        <Link href="/parent/update" className="text-primary underline">
-          Leave a message
-        </Link>
+      <main className="min-h-screen bg-[#f8f4f1] text-zinc-900">
+        <div className={shell}>
+          <div className={`${cardSurface} flex flex-col items-center gap-6`}>
+            {profileBlock}
+            <Link
+              href="/parent/update"
+              className="flex w-full flex-col items-center justify-center rounded-3xl bg-[#e11d48] py-5 text-xl font-semibold text-white"
+            >
+              <ParentBilingualOnColor
+                lang={lang}
+                primary={parentPrimary(lang, "update")}
+                english={parentEnglish("update")}
+                primaryClassName="block text-xl font-semibold"
+              />
+            </Link>
+          </div>
+        </div>
       </main>
     );
   }
 
   if (phase === "wait" && scheduledFor) {
     return (
-      <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-6 text-center">
-        <div className="text-5xl">🕐</div>
-        <h1 className="text-xl font-bold">Scheduled check-in</h1>
-        <p className="text-muted">
-          The call will be available after{" "}
-          <strong>{new Date(scheduledFor).toLocaleString()}</strong>
-        </p>
-        <p className="text-xs text-muted">
-          You&apos;ll get vibration when it&apos;s time; sound plays if the browser
-          allows it, or after you tap once on this tab.
-        </p>
+      <main className="min-h-screen bg-[#f8f4f1] text-zinc-900">
+        <div className={shell}>
+          <div className={`${cardSurface} flex flex-col items-center gap-8`}>
+            {profileBlock}
+            <p className="text-center text-2xl font-semibold tabular-nums text-zinc-800">
+              {new Date(scheduledFor).toLocaleString(parentLocaleTag(lang), {
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+              })}
+            </p>
+            {lang !== "en" ? (
+              <p className="text-center text-sm text-zinc-500">
+                (
+                {new Date(scheduledFor).toLocaleString("en-IN", {
+                  weekday: "short",
+                  month: "short",
+                  day: "numeric",
+                  hour: "numeric",
+                  minute: "2-digit",
+                })}
+                )
+              </p>
+            ) : null}
+          </div>
+        </div>
       </main>
     );
   }
@@ -279,58 +354,50 @@ function ParentIncomingInner() {
   if (phase === "ringing") {
     return (
       <main
-        className={`flex min-h-[100dvh] flex-col items-center justify-center gap-8 px-6 text-center ${
-          silenced ? "bg-card" : "animate-pulse bg-danger/10"
-        }`}
+        className="min-h-screen bg-[#f8f4f1] text-zinc-900"
+        onPointerDown={() => void unlockRingAudio()}
       >
-        <div className="text-6xl">📞</div>
-        <h1 className="text-2xl font-bold">Incoming check-in</h1>
-        <p className="text-muted">
-          {silenced
-            ? "Ring silenced — tap Answer when you are ready."
-            : "Your family is reaching out — this tab vibrates; sound may need one tap below."}
-        </p>
-        {!silenced && showAudioHint && (
-          <div className="w-full max-w-sm space-y-2 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3">
-            <p className="text-xs text-muted">
-              Websites can&apos;t autoplay sound in a new tab (browser anti-spam
-              rule). Tap once to hear the ringtone too.
-            </p>
+        <div className={`${shell} gap-10`}>
+          {profileBlock}
+          <div className="flex w-full max-w-md flex-col gap-4">
             <button
               type="button"
-              onClick={() => void unlockRingAudio()}
-              className="w-full rounded-xl bg-primary py-2.5 text-sm font-semibold text-white hover:bg-primary-light"
+              onClick={onAccept}
+              className="flex min-h-[7.5rem] w-full flex-col items-center justify-center gap-2 rounded-3xl bg-[#22c55e] px-4 text-white shadow-[0_10px_28px_rgba(34,197,94,0.35)] sm:min-h-32 sm:flex-row sm:gap-3 sm:text-[1.65rem]"
             >
-              Tap for ring sound
+              <Phone className="h-10 w-10 shrink-0 sm:h-12 sm:w-12" strokeWidth={2} />
+              <ParentBilingualOnColor
+                lang={lang}
+                primary={parentPrimary(lang, "accept")}
+                english={parentEnglish("accept")}
+                primaryClassName="block text-2xl font-semibold"
+              />
             </button>
-          </div>
-        )}
-        <div className="flex w-full max-w-xs flex-col gap-3">
-          <button
-            type="button"
-            onClick={answer}
-            className="rounded-full bg-success py-4 text-lg font-semibold text-white"
-          >
-            Answer
-          </button>
-          {!silenced && (
             <button
               type="button"
               onClick={decline}
-              className="rounded-full border border-card-border bg-card py-3 font-medium"
+              className="flex min-h-[7.5rem] w-full flex-col items-center justify-center gap-2 rounded-3xl border-2 border-rose-200 bg-white px-4 text-[#e11d48] shadow-[0_6px_20px_rgba(0,0,0,0.06)] sm:min-h-32 sm:flex-row sm:gap-3 sm:text-[1.65rem]"
             >
-              Silence ring
+              <PhoneOff className="h-10 w-10 shrink-0 sm:h-12 sm:w-12" strokeWidth={2} />
+              <ParentBilingual
+                lang={lang}
+                primary={parentPrimary(lang, "decline")}
+                english={parentEnglish("decline")}
+                primaryClassName="block text-2xl font-semibold text-[#e11d48]"
+                englishClassName="text-sm text-[#e11d48]/75"
+              />
             </button>
-          )}
+          </div>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-6 text-center">
-      <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-      <p className="text-muted">Checking…</p>
+    <main className="min-h-screen bg-[#f8f4f1] text-zinc-900">
+      <div className={shell}>
+        <div className="h-12 w-12 rounded-full border-4 border-[#e11d48]/30 border-t-[#e11d48]" />
+      </div>
     </main>
   );
 }
@@ -339,8 +406,8 @@ export default function ParentIncomingPage() {
   return (
     <Suspense
       fallback={
-        <main className="flex min-h-[40vh] items-center justify-center">
-          <p className="text-muted">Loading…</p>
+        <main className="flex min-h-screen items-center justify-center bg-[#f8f4f1]">
+          <div className="h-12 w-12 rounded-full border-4 border-[#e11d48]/30 border-t-[#e11d48]" />
         </main>
       }
     >

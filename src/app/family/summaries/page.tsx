@@ -1,8 +1,8 @@
-import Link from "next/link";
 import type { SummaryRecord } from "@/lib/types";
 import { getServerBaseUrl } from "@/lib/server-url";
 import { parseSummariesTabParam } from "@/lib/summaries-nav";
 import SummariesExplorer from "@/components/family/SummariesExplorer";
+import CarePageShell from "@/components/family/CarePageShell";
 
 async function fetchSummaries(): Promise<SummaryRecord[]> {
   try {
@@ -26,28 +26,19 @@ export default async function SummariesPage({
   const summaries = await fetchSummaries();
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-12">
-      <div>
-        <h1 className="text-2xl font-bold">Check-in summaries</h1>
-        <p className="mt-2 max-w-xl text-sm text-muted">
-          Past wellness check-ins and loved-one updates, with urgency labels and
-          full transcripts when you need them.
-        </p>
-      </div>
-
+    <CarePageShell pageTitle="Care Timeline">
       {summaries.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-card-border bg-card/50 p-10 text-center text-sm text-muted">
-          No summaries stored yet. Complete a call from the parent flow or POST
-          to <code className="rounded bg-background px-1">/api/summary</code>{" "}
-          to see entries here.
-        </p>
+        <div className="rounded-[1.25rem] border border-dashed border-zinc-200/60 bg-white p-10 text-center shadow-[0_2px_20px_rgba(0,0,0,0.04)]">
+          <p className="text-base font-semibold text-[#1f2937]">
+            Your timeline is waiting for the first care moment
+          </p>
+          <p className="mx-auto mt-2 max-w-xl text-sm text-[#6b7280]">
+            Complete a call from the parent flow and it will appear here.
+          </p>
+        </div>
       ) : (
         <SummariesExplorer summaries={summaries} initialTab={initialTab} />
       )}
-
-      <Link href="/family" className="text-sm text-muted hover:text-foreground">
-        ← Back to dashboard
-      </Link>
-    </main>
+    </CarePageShell>
   );
 }

@@ -26,6 +26,9 @@ import {
 import { useSearchParams } from "next/navigation";
 import { Conversation } from "@elevenlabs/client";
 import Link from "next/link";
+import { parentEnglish, parentPrimary, type ParentLang } from "@/lib/parent-i18n";
+import { ParentBilingual, ParentBilingualOnColor } from "@/components/parent/ParentBilingual";
+import { useParentPreferredLanguage } from "@/components/parent/useParentPreferredLanguage";
 
 const autostartedElevenLabsSessions = new Set<string>();
 
@@ -40,6 +43,7 @@ interface Message {
 }
 
 function ElevenLabsCallInner() {
+  const { lang } = useParentPreferredLanguage();
   const searchParams = useSearchParams();
   const handoffSessionId = searchParams.get("session")?.trim() ?? "";
 
@@ -206,7 +210,7 @@ function ElevenLabsCallInner() {
       setError(msg);
       setCallState("idle");
     }
-  }, [addLog, handoffSessionId]);
+  }, [addLog, handoffSessionId, saveTranscript]);
 
   useEffect(() => {
     if (!handoffSessionId) return;
@@ -234,13 +238,26 @@ function ElevenLabsCallInner() {
     <main className="flex flex-1 flex-col items-center px-4 py-8 sm:px-6">
       <div className="w-full max-w-lg">
         <Link href="/parent/update" className="text-sm text-muted hover:text-foreground">
-          &larr; Back
+          <ParentBilingual
+            lang={lang}
+            primary={`← ${parentPrimary(lang, "back")}`}
+            english={`← ${parentEnglish("back")}`}
+            align="left"
+            primaryClassName="block"
+            englishClassName="text-xs opacity-80"
+          />
         </Link>
-        <div className="mt-1 flex items-center gap-2">
+        <div className="mt-1 flex flex-wrap items-center gap-2">
           <span className="rounded-full bg-success/15 px-2 py-0.5 text-xs font-medium text-success">
             Option 3
           </span>
-          <h1 className="text-lg font-bold">ElevenLabs Conversational AI</h1>
+          <ParentBilingual
+            lang={lang}
+            primary={parentPrimary(lang, "elevenLabsProduct")}
+            english="ElevenLabs Conversational AI"
+            primaryClassName="block text-lg font-bold"
+            englishClassName="text-xs text-muted-foreground"
+          />
         </div>
       </div>
 
@@ -252,21 +269,46 @@ function ElevenLabsCallInner() {
           </div>
           {handoffSessionId ? (
             <div className="text-center">
-              <h2 className="text-xl font-bold">Check-in call (ElevenLabs)</h2>
-              <p className="mt-1 max-w-sm text-center text-sm text-muted">
-                Starting automatically after you answer. Retry if needed.
-              </p>
+              <ParentBilingual
+                lang={lang}
+                primary={parentPrimary(lang, "elevenLabsCheckIn")}
+                english={parentEnglish("elevenLabsCheckIn")}
+                primaryClassName="block text-xl font-bold"
+              />
+              <ParentBilingual
+                lang={lang}
+                primary={parentPrimary(lang, "checkInStartingAuto")}
+                english={parentEnglish("checkInStartingAuto")}
+                primaryClassName="mt-1 block max-w-sm text-center text-sm text-muted-foreground"
+                englishClassName="text-xs text-muted-foreground"
+              />
             </div>
           ) : (
             <>
               <div className="text-center">
-                <h2 className="text-2xl font-bold">ElevenLabs Full Stack</h2>
-                <p className="mt-1 max-w-sm text-center text-muted">
-                  ElevenLabs handles STT, LLM, and voice — WebRTC conversation.
-                </p>
+                <ParentBilingual
+                  lang={lang}
+                  primary={parentPrimary(lang, "elevenLabsDemo")}
+                  english={parentEnglish("elevenLabsDemo")}
+                  primaryClassName="block text-2xl font-bold"
+                />
+                <ParentBilingual
+                  lang={lang}
+                  primary={parentPrimary(lang, "elevenLabsDemoDesc")}
+                  english={parentEnglish("elevenLabsDemoDesc")}
+                  primaryClassName="mt-1 block max-w-sm text-center text-muted-foreground"
+                  englishClassName="text-xs text-muted-foreground"
+                />
               </div>
               <div className="w-full max-w-sm rounded-xl border border-card-border bg-card p-4 text-sm">
-                <p className="mb-3 font-semibold text-muted">Setup Required</p>
+                <ParentBilingual
+                  lang={lang}
+                  primary={parentPrimary(lang, "setupRequired")}
+                  english={parentEnglish("setupRequired")}
+                  align="left"
+                  primaryClassName="mb-3 block font-semibold text-muted-foreground"
+                  englishClassName="text-xs text-muted-foreground"
+                />
                 <ol className="space-y-1.5 text-muted list-decimal list-inside">
                   <li>
                     Create a free account at{" "}
@@ -310,7 +352,20 @@ function ElevenLabsCallInner() {
             onClick={startCall}
             className="rounded-full bg-success px-10 py-4 text-lg font-semibold text-white shadow-lg transition-all hover:bg-success/90 hover:shadow-xl active:scale-95"
           >
-            {handoffSessionId ? "Retry check-in call" : "Start Test Call"}
+            <ParentBilingualOnColor
+              lang={lang}
+              primary={
+                handoffSessionId
+                  ? parentPrimary(lang, "retryCheckInCall")
+                  : parentPrimary(lang, "startTestCall")
+              }
+              english={
+                handoffSessionId
+                  ? parentEnglish("retryCheckInCall")
+                  : parentEnglish("startTestCall")
+              }
+              primaryClassName="block text-lg font-semibold"
+            />
           </button>
         </div>
       )}
@@ -321,8 +376,19 @@ function ElevenLabsCallInner() {
           <div className="flex h-28 w-28 animate-pulse items-center justify-center rounded-full bg-success/20">
             <span className="text-6xl">🔗</span>
           </div>
-          <h2 className="text-xl font-semibold">Connecting to ElevenLabs...</h2>
-          <p className="text-sm text-muted">Establishing WebRTC session</p>
+          <ParentBilingual
+            lang={lang}
+            primary={parentPrimary(lang, "connectingElevenLabs")}
+            english={parentEnglish("connectingElevenLabs")}
+            primaryClassName="block text-xl font-semibold"
+          />
+          <ParentBilingual
+            lang={lang}
+            primary={parentPrimary(lang, "establishingWebRtc")}
+            english={parentEnglish("establishingWebRtc")}
+            primaryClassName="block text-sm text-muted-foreground"
+            englishClassName="text-xs text-muted-foreground"
+          />
         </div>
       )}
 
@@ -342,9 +408,22 @@ function ElevenLabsCallInner() {
                 />
               </div>
               <div>
-                <p className="font-semibold">
-                  {agentMode === "speaking" ? "Agent speaking..." : "Listening to you..."}
-                </p>
+                <ParentBilingual
+                  lang={lang}
+                  primary={
+                    agentMode === "speaking"
+                      ? parentPrimary(lang, "agentSpeaking")
+                      : parentPrimary(lang, "listeningToYou")
+                  }
+                  english={
+                    agentMode === "speaking"
+                      ? parentEnglish("agentSpeaking")
+                      : parentEnglish("listeningToYou")
+                  }
+                  align="left"
+                  primaryClassName="block font-semibold"
+                  englishClassName="text-xs text-muted-foreground"
+                />
                 <p className="text-sm text-muted">{formatDuration(callDuration)}</p>
               </div>
             </div>
@@ -352,7 +431,12 @@ function ElevenLabsCallInner() {
               onClick={endCall}
               className="rounded-full bg-danger px-6 py-2.5 font-medium text-white transition-colors hover:bg-danger/80"
             >
-              End Call
+              <ParentBilingualOnColor
+                lang={lang}
+                primary={parentPrimary(lang, "endCall")}
+                english={parentEnglish("endCall")}
+                primaryClassName="block font-medium"
+              />
             </button>
           </div>
 
@@ -362,12 +446,16 @@ function ElevenLabsCallInner() {
 
           <div className="flex flex-1 flex-col gap-3 overflow-y-auto rounded-xl border border-card-border bg-card p-4">
             {messages.length === 0 && (
-              <p className="text-center text-sm text-muted">
-                The agent will greet you shortly...
-              </p>
+              <ParentBilingual
+                lang={lang}
+                primary={parentPrimary(lang, "agentGreetSoon")}
+                english={parentEnglish("agentGreetSoon")}
+                primaryClassName="block text-center text-sm text-muted-foreground"
+                englishClassName="text-xs text-muted-foreground"
+              />
             )}
             {messages.map((msg, i) => (
-              <ELBubble key={i} msg={msg} />
+              <ELBubble key={i} msg={msg} lang={lang} />
             ))}
             <div ref={transcriptEndRef} />
           </div>
@@ -378,24 +466,68 @@ function ElevenLabsCallInner() {
       {callState === "ended" && (
         <div className="flex w-full max-w-lg flex-1 flex-col gap-6 pt-4">
           <div className="text-center">
-            <h2 className="text-2xl font-bold">Call Ended</h2>
-            <p className="text-muted">Duration: {formatDuration(callDuration)}</p>
+            <ParentBilingual
+              lang={lang}
+              primary={parentPrimary(lang, "callEnded")}
+              english={parentEnglish("callEnded")}
+              primaryClassName="block text-2xl font-bold"
+            />
+            <p className="text-muted-foreground">
+              {parentPrimary(lang, "duration")}: {formatDuration(callDuration)}
+              {lang !== "en" ? (
+                <span className="mt-0.5 block text-xs text-muted-foreground">
+                  ({parentEnglish("duration")}: {formatDuration(callDuration)})
+                </span>
+              ) : null}
+            </p>
             {saveState === "saving" && (
-              <p className="mt-2 text-sm text-muted animate-pulse">Saving summary to family dashboard...</p>
+              <ParentBilingual
+                lang={lang}
+                primary={parentPrimary(lang, "savingSummary")}
+                english={parentEnglish("savingSummary")}
+                primaryClassName="mt-2 block animate-pulse text-sm text-muted-foreground"
+                englishClassName="text-xs text-muted-foreground"
+              />
             )}
             {saveState === "saved" && (
-              <p className="mt-2 text-sm text-success font-medium">✓ Summary saved — family will be notified</p>
+              <ParentBilingual
+                lang={lang}
+                primary={parentPrimary(lang, "summarySaved")}
+                english={parentEnglish("summarySaved")}
+                primaryClassName="mt-2 block text-sm font-medium text-success"
+                englishClassName="text-xs text-muted-foreground"
+              />
             )}
             {saveState === "error" && (
-              <p className="mt-2 text-sm text-danger">Failed to save summary. Check the server logs.</p>
+              <ParentBilingual
+                lang={lang}
+                primary={parentPrimary(lang, "summarySaveFailed")}
+                english={parentEnglish("summarySaveFailed")}
+                primaryClassName="mt-2 block text-sm text-danger"
+                englishClassName="text-xs text-muted-foreground"
+              />
             )}
           </div>
           <div className="flex flex-1 flex-col gap-3 overflow-y-auto rounded-xl border border-card-border bg-card p-4">
-            <h3 className="text-sm font-semibold text-muted">Transcript</h3>
+            <ParentBilingual
+              lang={lang}
+              primary={parentPrimary(lang, "transcript")}
+              english={parentEnglish("transcript")}
+              align="left"
+              primaryClassName="block text-sm font-semibold text-muted-foreground"
+              englishClassName="text-xs text-muted-foreground"
+            />
             {messages.length === 0 ? (
-              <p className="text-sm text-muted">No transcript recorded.</p>
+              <ParentBilingual
+                lang={lang}
+                primary={parentPrimary(lang, "noTranscript")}
+                english={parentEnglish("noTranscript")}
+                align="left"
+                primaryClassName="block text-sm text-muted-foreground"
+                englishClassName="text-xs text-muted-foreground"
+              />
             ) : (
-              messages.map((msg, i) => <ELBubble key={i} msg={msg} />)
+              messages.map((msg, i) => <ELBubble key={i} msg={msg} lang={lang} />)
             )}
           </div>
           <div className="flex gap-3">
@@ -408,13 +540,24 @@ function ElevenLabsCallInner() {
               }}
               className="flex-1 rounded-xl bg-success px-6 py-3 font-medium text-white transition-colors hover:bg-success/90"
             >
-              Start Another Call
+              <ParentBilingualOnColor
+                lang={lang}
+                primary={parentPrimary(lang, "startAnotherCall")}
+                english={parentEnglish("startAnotherCall")}
+                primaryClassName="block font-medium"
+              />
             </button>
             <Link
               href="/parent/update"
               className="flex-1 rounded-xl border border-card-border bg-card px-6 py-3 text-center font-medium transition-colors hover:bg-background"
             >
-              Back to Home
+              <ParentBilingual
+                lang={lang}
+                primary={parentPrimary(lang, "backToHome")}
+                english={parentEnglish("backToHome")}
+                primaryClassName="block font-medium"
+                englishClassName="text-xs text-muted-foreground"
+              />
             </Link>
           </div>
         </div>
@@ -441,22 +584,37 @@ function ElevenLabsCallInner() {
   );
 }
 
+function ElevenLabsLoadingFallback() {
+  const { lang } = useParentPreferredLanguage();
+  return (
+    <main className="flex flex-1 flex-col items-center justify-center px-4 py-12">
+      <ParentBilingual
+        lang={lang}
+        primary={parentPrimary(lang, "loading")}
+        english={parentEnglish("loading")}
+        primaryClassName="block text-muted-foreground"
+        englishClassName="text-xs text-muted-foreground"
+      />
+    </main>
+  );
+}
+
 export default function ElevenLabsCallPage() {
   return (
-    <Suspense
-      fallback={
-        <main className="flex flex-1 flex-col items-center justify-center px-4 py-12">
-          <p className="text-muted">Loading…</p>
-        </main>
-      }
-    >
+    <Suspense fallback={<ElevenLabsLoadingFallback />}>
       <ElevenLabsCallInner />
     </Suspense>
   );
 }
 
-function ELBubble({ msg }: { msg: Message }) {
+function ELBubble({ msg, lang }: { msg: Message; lang: ParentLang }) {
   const isAgent = msg.role === "agent";
+  const rolePrimary = isAgent
+    ? parentPrimary(lang, "aiAssistant")
+    : parentPrimary(lang, "you");
+  const roleEnglish = isAgent
+    ? `${parentEnglish("aiAssistant")} (ElevenLabs)`
+    : parentEnglish("you");
   return (
     <div className={`flex ${isAgent ? "justify-start" : "justify-end"}`}>
       <div
@@ -464,9 +622,12 @@ function ELBubble({ msg }: { msg: Message }) {
           isAgent ? "bg-success/10 text-foreground" : "bg-foreground/10 text-foreground"
         }`}
       >
-        <p className="mb-1 text-xs font-medium text-muted">
-          {isAgent ? "ElevenLabs Agent" : "You"}
-        </p>
+        <div className="mb-1 text-xs font-medium text-muted-foreground">
+          <span className="block">{rolePrimary}</span>
+          {lang !== "en" ? (
+            <span className="block text-[10px] opacity-80">({roleEnglish})</span>
+          ) : null}
+        </div>
         {msg.text}
       </div>
     </div>

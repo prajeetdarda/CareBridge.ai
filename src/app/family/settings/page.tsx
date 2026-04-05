@@ -1,11 +1,12 @@
-import Link from "next/link";
 import type { FamilyProfile } from "@/lib/types";
 import { getServerBaseUrl } from "@/lib/server-url";
 import SettingsForm from "@/components/dashboard/SettingsForm";
+import CarePageShell from "@/components/family/CarePageShell";
 
 const emptyProfile: FamilyProfile = {
   familyMemberName: "",
   lovedOneName: "",
+  lovedOneDateOfBirth: "",
   preferredLanguage: "en",
   relationshipLabel: "",
   careTopics: [],
@@ -29,20 +30,8 @@ export default async function SettingsPage() {
   const profile = await fetchProfile();
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-12">
-      <div>
-        <h1 className="text-2xl font-bold">Care settings</h1>
-        <p className="mt-2 max-w-xl text-sm text-muted">
-          Names, language, topics to watch for, reminders, and backup contacts.
-          Stored in-memory for this demo (resets when the server restarts).
-        </p>
-      </div>
-
+    <CarePageShell pageTitle="Care Profile">
       <SettingsForm initial={profile} />
-
-      <Link href="/family" className="text-sm text-muted hover:text-foreground">
-        ← Back to dashboard
-      </Link>
-    </main>
+    </CarePageShell>
   );
 }
