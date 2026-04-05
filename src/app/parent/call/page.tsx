@@ -1,11 +1,16 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { createAudioCapture, createAudioPlayer } from "@/lib/audio";
 import { connectGeminiLive } from "@/lib/gemini";
+import { CALL_START_USER_SIGNAL } from "@/lib/call-prompt";
 import type { AudioCapture, AudioPlayer, AudioChunk } from "@/lib/audio";
 import type { GeminiSession } from "@/lib/gemini";
+
+/** Prevents duplicate auto-start when React Strict Mode runs effects twice. */
+const autostartedGeminiSessions = new Set<string>();
 
 type CallState = "idle" | "connecting" | "active" | "ended";
 
@@ -15,7 +20,10 @@ interface TranscriptEntry {
   timestamp: Date;
 }
 
-export default function LiveCallPage() {
+function LiveCallPageInner() {
+  const searchParams = useSearchParams();
+  const handoffSessionId = searchParams.get("session")?.trim() ?? "";
+
   const [callState, setCallState] = useState<CallState>("idle");
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
   const [currentAIText, setCurrentAIText] = useState("");
@@ -74,6 +82,37 @@ export default function LiveCallPage() {
     recordedChunksRef.current = [];
 
     try {
+      const sessionId = handoffSessionId || crypto.randomUUID();
+      sessionIdRef.current = sessionId;
+
+      let systemInstruction: string | undefined;
+      if (handoffSessionId) {
+        addLog("Loading check-in context from family…");
+        const ctxRes = await fetch(
+          `/api/call/context?sessionId=${encodeURIComponent(handoffSessionId)}`
+        );
+        const ctxData = (await ctxRes.json()) as {
+          systemInstruction?: string;
+          error?: string;
+          code?: string;
+          scheduledFor?: string;
+        };
+        if (ctxRes.status === 403 && ctxData.code === "scheduled_not_due") {
+          const when = ctxData.scheduledFor
+            ? new Date(ctxData.scheduledFor).toLocaleString()
+            : "the scheduled time";
+          throw new Error(
+            `This check-in is not active yet. It opens after ${when}.`
+          );
+        }
+        if (!ctxRes.ok) {
+          addLog(`Context unavailable (${ctxData.error ?? ctxRes.status}) — using default prompt`);
+        } else if (ctxData.systemInstruction) {
+          systemInstruction = ctxData.systemInstruction;
+          addLog("Using your family’s care settings for this call");
+        }
+      }
+
       addLog("Fetching ephemeral token...");
       const tokenRes = await fetch("/api/call/token");
       const tokenData = await tokenRes.json();
@@ -115,7 +154,7 @@ export default function LiveCallPage() {
           setCurrentAIText("");
 
           const userText = userTextBuffer.current.trim();
-          if (userText) {
+          if (userText && userText !== CALL_START_USER_SIGNAL) {
             setTranscript((prev) => [
               ...prev,
               { role: "user", text: userText, timestamp: new Date() },
@@ -146,10 +185,14 @@ export default function LiveCallPage() {
           setCallState("ended");
           if (timerRef.current) clearInterval(timerRef.current);
         },
-      });
+      }, systemInstruction);
 
       sessionRef.current = session;
       addLog("Connected! Starting audio stream...");
+      queueMicrotask(() => {
+        session.sendText(CALL_START_USER_SIGNAL);
+        addLog("Speak-first cue sent — assistant should open the call");
+      });
 
       capture.setOnData((base64) => {
         recordedChunksRef.current.push({ source: "mic", data: base64 });
@@ -161,7 +204,7 @@ export default function LiveCallPage() {
       }, 1000);
 
       setCallState("active");
-      addLog("Call active — speak now");
+      addLog("Call active — assistant speaks first, then you can reply");
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Connection failed";
       addLog(`FAILED: ${msg}`);
@@ -169,10 +212,17 @@ export default function LiveCallPage() {
       cleanup();
       setCallState("idle");
     }
-  }, [addLog]);
+  }, [addLog, handoffSessionId]);
 
-  const sessionIdRef = useRef(crypto.randomUUID());
+  const sessionIdRef = useRef<string>("");
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!handoffSessionId) return;
+    if (autostartedGeminiSessions.has(handoffSessionId)) return;
+    autostartedGeminiSessions.add(handoffSessionId);
+    void startCall();
+  }, [handoffSessionId, startCall]);
 
   const endCall = useCallback(async () => {
     // Flush any partial text
@@ -189,7 +239,7 @@ export default function LiveCallPage() {
       setTranscript((prev) => [...prev, entry]);
     }
     const userText = userTextBuffer.current.trim();
-    if (userText) {
+    if (userText && userText !== CALL_START_USER_SIGNAL) {
       const entry: TranscriptEntry = { role: "user", text: userText, timestamp: new Date() };
       finalTranscript.push(entry);
       setTranscript((prev) => [...prev, entry]);
@@ -251,9 +301,9 @@ export default function LiveCallPage() {
       setSaving(false);
     }
 
-    // Reset sessionId for next call
-    sessionIdRef.current = crypto.randomUUID();
-  }, [callDuration, addLog]);
+    // Next call: reuse handoff session id if URL still has it (same link); else new id
+    sessionIdRef.current = handoffSessionId || crypto.randomUUID();
+  }, [callDuration, addLog, handoffSessionId]);
 
   const formatDuration = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -266,7 +316,7 @@ export default function LiveCallPage() {
       {/* Header */}
       <div className="w-full max-w-lg">
         <Link
-          href="/parent"
+          href="/parent/update"
           className="text-sm text-muted hover:text-foreground"
         >
           &larr; Back
@@ -279,11 +329,22 @@ export default function LiveCallPage() {
           <div className="flex h-28 w-28 items-center justify-center rounded-full bg-primary/10">
             <span className="text-6xl">📞</span>
           </div>
-          <h1 className="text-2xl font-bold">Live Voice Demo</h1>
-          <p className="max-w-sm text-center text-muted">
-            Test the AI care assistant. Click below to start a live voice
-            conversation with Gemini.
-          </p>
+          {handoffSessionId ? (
+            <>
+              <h1 className="text-xl font-bold">Check-in call</h1>
+              <p className="max-w-sm text-center text-sm text-muted">
+                The call should start automatically after you answer. If it
+                didn&apos;t, tap retry.
+              </p>
+            </>
+          ) : (
+            <>
+              <h1 className="text-2xl font-bold">Live Voice Demo</h1>
+              <p className="max-w-sm text-center text-muted">
+                Test the AI care assistant with Gemini Live — tap below to start.
+              </p>
+            </>
+          )}
           {error && (
             <div className="rounded-lg bg-danger/10 px-4 py-3 text-sm text-danger">
               {error}
@@ -293,7 +354,7 @@ export default function LiveCallPage() {
             onClick={startCall}
             className="rounded-full bg-success px-10 py-4 text-lg font-semibold text-white shadow-lg transition-all hover:bg-success/90 hover:shadow-xl active:scale-95"
           >
-            Start Test Call
+            {handoffSessionId ? "Retry check-in call" : "Start Test Call"}
           </button>
         </div>
       )}
@@ -346,7 +407,7 @@ export default function LiveCallPage() {
           <div className="flex flex-1 flex-col gap-3 overflow-y-auto rounded-xl border border-card-border bg-card p-4">
             {transcript.length === 0 && !currentAIText && !currentUserText && (
               <p className="text-center text-sm text-muted">
-                Speak to start the conversation...
+                The assistant speaks first — then you can reply in any language you prefer...
               </p>
             )}
 
@@ -421,7 +482,7 @@ export default function LiveCallPage() {
               Start Another Call
             </button>
             <Link
-              href="/parent"
+              href="/parent/update"
               className="flex-1 rounded-xl border border-card-border bg-card px-6 py-3 text-center font-medium transition-colors hover:bg-background"
             >
               Back to Home
@@ -447,6 +508,20 @@ export default function LiveCallPage() {
         </div>
       )}
     </main>
+  );
+}
+
+export default function LiveCallPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex flex-1 flex-col items-center justify-center px-4 py-12">
+          <p className="text-muted">Loading…</p>
+        </main>
+      }
+    >
+      <LiveCallPageInner />
+    </Suspense>
   );
 }
 

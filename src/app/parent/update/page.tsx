@@ -227,8 +227,8 @@ export default function UpdatePage() {
 
   if (screen === "home") return (
     <main className="flex flex-1 flex-col items-center justify-center gap-6 px-6 py-10">
-      <Link href="/parent" className="self-start text-sm text-muted hover:text-foreground">
-        &larr; Back
+      <Link href="/" className="self-start text-sm text-muted hover:text-foreground">
+        &larr; Back to role select
       </Link>
       <h1 className="text-4xl font-bold text-center">Leave a Message</h1>
       <div className="flex w-full max-w-sm flex-col gap-5 mt-4">
@@ -388,7 +388,7 @@ export default function UpdatePage() {
           className="rounded-3xl bg-primary py-8 text-2xl font-bold text-white shadow-xl active:scale-95 transition-transform">
           Send Another
         </button>
-        <Link href="/parent"
+        <Link href="/"
           className="rounded-3xl border-4 border-muted py-6 text-center text-2xl font-semibold text-muted">
           Done
         </Link>

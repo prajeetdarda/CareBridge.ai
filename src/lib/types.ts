@@ -7,6 +7,9 @@
 
 export type UrgencyLevel = "summary_later" | "notify_soon" | "urgent_now";
 
+/** Live voice stack for the parent check-in call */
+export type CallVoiceProvider = "gemini" | "elevenlabs";
+
 // === Data Models ===
 
 export interface FamilyProfile {
@@ -22,7 +25,7 @@ export interface FamilyProfile {
 export interface SummaryRecord {
   id: string;
   timestamp: string;
-  initiatedBy: "family" | "loved_one";
+  initiatedBy: "family" | "loved_one" | "ai_agent";
   transcript: string;
   summary: string;
   urgencyLevel: UrgencyLevel;
@@ -70,9 +73,29 @@ export interface BackupContact {
 // === API Request Types ===
 // Dev 1 sends these. Dev 2 receives and handles them.
 
+/** Family dashboard → POST /api/call/start */
 export interface StartCallRequest {
-  lovedOneName: string;
-  language: string;
+  mode: "now" | "schedule";
+  /** Required when mode === "schedule" (ISO 8601) */
+  scheduledFor?: string;
+  /** Optional one-off notes; main prompt still comes from care settings profile */
+  callNotes?: string;
+  /** Default Gemini Live; ElevenLabs uses /parent/call-elevenlabs */
+  voiceProvider?: CallVoiceProvider;
+}
+
+/** Stored server-side for parent ?session= handoff */
+export interface PendingCallRecord {
+  sessionId: string;
+  createdAt: string;
+  expiresAt: string;
+  /** If set, parent cannot fetch context until this time */
+  scheduledFor: string | null;
+  /** When set (immediate check-in), incoming screen may ring; scheduled uses scheduledFor instead */
+  incomingSignalAt?: string | null;
+  profileSnapshot: FamilyProfile;
+  callNotes?: string;
+  voiceProvider?: CallVoiceProvider;
 }
 
 export interface EndCallRequest {
@@ -118,6 +141,25 @@ export interface StartCallResponse {
   sessionId: string;
   status: "ringing";
   startedAt: string;
+  /** Path-only URL for the parent device, e.g. /parent/call?session=… */
+  parentCallUrl: string;
+  /** Open on parent phone first: wait screen then rings when check-in is active */
+  parentIncomingUrl: string;
+  scheduledFor: string | null;
+  voiceProvider: CallVoiceProvider;
+}
+
+export type IncomingCallPhase = "wait" | "ringing" | "gone";
+
+export interface GetIncomingStatusResponse {
+  phase: IncomingCallPhase;
+  scheduledFor?: string;
+  /** Present when phase is wait or ringing */
+  voiceProvider?: CallVoiceProvider;
+}
+
+export interface GetCallContextResponse {
+  systemInstruction: string;
 }
 
 export interface EndCallResponse {

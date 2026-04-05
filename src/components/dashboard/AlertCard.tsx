@@ -7,15 +7,16 @@ interface AlertCardProps {
   alert: AlertRecord;
 }
 
-const levelStyle = {
+const levelStyle: Record<string, { label: string; ring: string }> = {
   notify_soon: { label: "Notify soon", ring: "border-accent/40 bg-accent/5" },
   urgent_now: { label: "Urgent now", ring: "border-danger/50 bg-danger/5" },
+  summary_later: { label: "Info", ring: "border-card-border bg-card" },
 };
 
 export default function AlertCard({ alert }: AlertCardProps) {
   const [gone, setGone] = useState(false);
   const [busy, setBusy] = useState(false);
-  const style = levelStyle[alert.urgencyLevel];
+  const style = levelStyle[alert.urgencyLevel] ?? levelStyle.summary_later;
 
   async function acknowledge() {
     setBusy(true);

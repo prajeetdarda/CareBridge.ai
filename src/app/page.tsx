@@ -15,14 +15,14 @@ export default function RoleSelectPage() {
 
       <div className="flex flex-col gap-5 sm:flex-row">
         <Link
-          href="/parent"
+          href="/parent/update"
           className="flex h-40 w-64 flex-col items-center justify-center gap-3 rounded-2xl border border-card-border bg-card shadow-sm transition-all hover:shadow-md hover:scale-[1.02]"
         >
           <span className="text-4xl">🧓</span>
           <span className="text-lg font-semibold">
             I am the Parent / Grandparent
           </span>
-          <span className="text-sm text-muted">Receive check-in calls</span>
+          <span className="text-sm text-muted">Messages &amp; check-in calls</span>
         </Link>
 
         <Link

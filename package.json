@@ -4,6 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:lan": "next dev -H 0.0.0.0",
+    "tunnel": "node scripts/tunnel.cjs",
+    "tunnel:cf": "cloudflared tunnel --url http://localhost:3000",
+    "tunnel:lt": "lt --port 3000 --host https://loca.lt",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -22,6 +26,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.2",
+    "localtunnel": "^2.0.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

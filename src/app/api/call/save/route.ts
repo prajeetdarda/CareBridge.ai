@@ -36,10 +36,11 @@ export async function POST(request: Request) {
       }
     }
 
-    const audioPath = path.join(tmpDir, `${sessionId}.pcm`);
+    const SAMPLE_RATE_HZ = 16000;
+    const audioPath = path.join(tmpDir, `${sessionId}.wav`);
     const transcriptPath = path.join(tmpDir, `${sessionId}.json`);
 
-    // Save combined audio
+    // Save combined audio as WAV (browsers cannot play raw .pcm in <audio>)
     if (pcmBuffers.length > 0) {
       const totalLen = pcmBuffers.reduce((s, b) => s + b.length, 0);
       const merged = Buffer.alloc(totalLen);
@@ -48,9 +49,10 @@ export async function POST(request: Request) {
         buf.copy(merged, offset);
         offset += buf.length;
       }
-      await writeFile(audioPath, merged);
+      const wav = wrapPcm16LeMonoWav(merged, SAMPLE_RATE_HZ);
+      await writeFile(audioPath, wav);
       console.log(
-        `[call/save] Saved combined audio: ${audioPath} (${merged.length} bytes, ~${Math.round(merged.length / 32000)}s at 16kHz)`
+        `[call/save] Saved combined audio: ${audioPath} (${wav.length} bytes, ~${Math.round(merged.length / 32000)}s at 16kHz)`
       );
     }
 
@@ -64,7 +66,7 @@ export async function POST(request: Request) {
     await writeFile(transcriptPath, JSON.stringify(transcriptData, null, 2));
     console.log(`[call/save] Saved transcript: ${transcriptPath}`);
 
-    const mediaPath = `tmp/recordings/${sessionId}.pcm`;
+    const mediaPath = `tmp/recordings/${sessionId}.wav`;
 
     return NextResponse.json({
       success: true,
@@ -82,6 +84,30 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+}
+
+/** 16-bit mono little-endian PCM → playable WAV (RIFF/WAVE). */
+function wrapPcm16LeMonoWav(pcm: Buffer, sampleRate: number): Buffer {
+  const numChannels = 1;
+  const bitsPerSample = 16;
+  const blockAlign = (numChannels * bitsPerSample) / 8;
+  const byteRate = sampleRate * blockAlign;
+  const dataSize = pcm.length;
+  const header = Buffer.alloc(44);
+  header.write("RIFF", 0);
+  header.writeUInt32LE(36 + dataSize, 4);
+  header.write("WAVE", 8);
+  header.write("fmt ", 12);
+  header.writeUInt32LE(16, 16);
+  header.writeUInt16LE(1, 20);
+  header.writeUInt16LE(numChannels, 22);
+  header.writeUInt32LE(sampleRate, 24);
+  header.writeUInt32LE(byteRate, 28);
+  header.writeUInt16LE(blockAlign, 32);
+  header.writeUInt16LE(bitsPerSample, 34);
+  header.write("data", 36);
+  header.writeUInt32LE(dataSize, 40);
+  return Buffer.concat([header, pcm]);
 }
 
 /**

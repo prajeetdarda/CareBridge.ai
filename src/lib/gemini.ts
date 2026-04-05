@@ -5,6 +5,7 @@
  */
 
 import { GoogleGenAI, Modality, type LiveServerMessage } from "@google/genai";
+import { defaultSystemInstruction } from "@/lib/call-prompt";
 
 const MODEL = "gemini-3.1-flash-live-preview";
 
@@ -24,21 +25,6 @@ export interface GeminiSession {
   disconnect: () => void;
 }
 
-const DEFAULT_SYSTEM_INSTRUCTION = `You are a warm, caring AI wellness check-in assistant for Family Care Relay AI.
-You have been asked by a family member to check in on their loved one (parent or grandparent).
-
-Guidelines:
-- Start by introducing yourself clearly: "Hi, this is your family's care assistant calling to check in on behalf of your child."
-- Speak in a warm, respectful, and culturally sensitive tone
-- Ask about their day, how they're feeling, whether they took their medications, what they ate, and if they did any activity or exercise
-- Listen carefully and respond naturally — this should feel like a caring conversation, not a medical questionnaire
-- If they mention anything concerning (pain, dizziness, falls, chest issues, breathing problems), gently ask follow-up questions to understand the severity
-- Be transparent that you are an AI assistant, not a real person
-- Do not give medical advice or diagnose anything
-- Be patient and speak clearly
-- Keep the conversation warm and relatively brief (3-5 minutes)
-- End by asking if there's anything else they'd like their family to know`;
-
 export async function connectGeminiLive(
   token: string,
   callbacks: GeminiCallbacks,
@@ -51,7 +37,7 @@ export async function connectGeminiLive(
 
   const config = {
     responseModalities: [Modality.AUDIO],
-    systemInstruction: systemInstruction || DEFAULT_SYSTEM_INSTRUCTION,
+    systemInstruction: systemInstruction || defaultSystemInstruction(),
     speechConfig: {
       voiceConfig: {
         prebuiltVoiceConfig: { voiceName: "Aoede" },

@@ -45,11 +45,14 @@ export async function POST(request: Request) {
   const { careTopics } = getProfile();
   const analyzed = await processTranscript(body, careTopics);
 
+  // For media-only updates, prefer the AI-extracted transcription over the empty client string
+  const storedTranscript = analyzed.aiTranscription ?? body.transcript;
+
   const record: SummaryRecord = {
     id: crypto.randomUUID(),
     timestamp: new Date().toISOString(),
     initiatedBy: body.initiatedBy,
-    transcript: body.transcript,
+    transcript: storedTranscript,
     summary: analyzed.summary,
     urgencyLevel: analyzed.urgencyLevel,
     escalationReason: analyzed.escalationReason,

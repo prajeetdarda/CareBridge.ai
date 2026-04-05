@@ -98,13 +98,13 @@ export default async function FamilyDashboardPage() {
           <span className="text-xs text-muted">Topics, reminders, contacts</span>
         </Link>
         <Link
-          href="/parent"
+          href="/family/check-in"
           className="flex flex-col gap-1 rounded-xl border-2 border-dashed border-primary bg-primary/5 p-5 transition-all hover:bg-primary/10"
         >
           <span className="text-xl">📞</span>
           <span className="font-medium text-primary">Start check-in</span>
           <span className="text-xs text-muted">
-            Open the loved-one flow to place a call (demo)
+            Opens parent incoming in a new tab (demo) or schedule a link
           </span>
         </Link>
       </section>

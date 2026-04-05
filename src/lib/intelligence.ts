@@ -1,13 +1,15 @@
+import fs from "fs";
+import path from "path";
 import type { UrgencyLevel, SubmitSummaryRequest } from "./types";
 
 /**
- * Intelligence engine — Dev 2.
+ * Intelligence engine.
  * Summarizes transcripts and classifies urgency via Gemini when
- * GEMINI_API_KEY is set; otherwise uses a small heuristic fallback
+ * GOOGLE_API_KEY is set; otherwise uses a small heuristic fallback
  * so the app works in demos without a key.
  */
 
-const GEMINI_MODEL = "gemini-1.5-flash";
+const GEMINI_MODEL = "gemini-2.5-flash";
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 const URGENT_SIGNALS = [
@@ -59,7 +61,7 @@ function heuristicSummary(transcript: string, language?: string): string {
     trimmed.length > 280 ? `${trimmed.slice(0, 280)}…` : trimmed;
   return (
     `Check-in note${lang}: ${preview}\n\n` +
-    "This is an offline summary — add GEMINI_API_KEY for AI-generated care insights (mood, meds, activity)."
+    "This is an offline summary — add GOOGLE_API_KEY for AI-generated care insights (mood, meds, activity)."
   );
 }
 
@@ -85,14 +87,20 @@ function parseJsonObject(raw: string): Record<string, unknown> | null {
 }
 
 function normalizeUrgency(value: unknown): UrgencyLevel {
-  if (value === "urgent_now" || value === "notify_soon" || value === "summary_later") {
+  if (
+    value === "urgent_now" ||
+    value === "notify_soon" ||
+    value === "summary_later"
+  ) {
     return value;
   }
   return "summary_later";
 }
 
-async function callGeminiJson(prompt: string): Promise<Record<string, unknown> | null> {
-  const key = process.env.GEMINI_API_KEY;
+async function callGeminiJson(
+  prompt: string
+): Promise<Record<string, unknown> | null> {
+  const key = process.env.GOOGLE_API_KEY;
   if (!key) return null;
 
   const res = await fetch(`${GEMINI_URL}?key=${encodeURIComponent(key)}`, {
@@ -120,6 +128,160 @@ async function callGeminiJson(prompt: string): Promise<Record<string, unknown> |
   return parseJsonObject(text);
 }
 
+const MIME_FROM_EXT: Record<string, { audio: string; video: string; image: string }> = {
+  ".webm": { audio: "audio/webm", video: "video/webm", image: "image/webp" },
+  ".ogg":  { audio: "audio/ogg",  video: "video/ogg",  image: "image/png" },
+  ".mp4":  { audio: "audio/mp4",  video: "video/mp4",  image: "image/jpeg" },
+  ".mov":  { audio: "audio/mp4",  video: "video/quicktime", image: "image/jpeg" },
+  ".jpg":  { audio: "audio/webm", video: "video/webm", image: "image/jpeg" },
+  ".jpeg": { audio: "audio/webm", video: "video/webm", image: "image/jpeg" },
+  ".png":  { audio: "audio/webm", video: "video/webm", image: "image/png" },
+  ".webp": { audio: "audio/webm", video: "video/webm", image: "image/webp" },
+};
+
+/**
+ * Reads the saved media file and sends it to Gemini multimodal for real analysis.
+ * Returns null if the file is missing, too large, or Gemini fails.
+ */
+async function analyzeMediaFile(
+  mediaPath: string,
+  mediaType: "audio" | "image" | "video",
+  careTopics?: string[]
+): Promise<{
+  transcription?: string;
+  summary: string;
+  urgencyLevel: UrgencyLevel;
+  escalationReason?: string;
+} | null> {
+  const key = process.env.GOOGLE_API_KEY;
+  if (!key) return null;
+
+  const fullPath = path.join(process.cwd(), mediaPath);
+  let fileBuffer: Buffer;
+  try {
+    fileBuffer = fs.readFileSync(fullPath);
+  } catch {
+    console.error("[intelligence] Cannot read media file:", fullPath);
+    return null;
+  }
+
+  // Inline base64 limit is ~20 MB total request — skip large files
+  if (fileBuffer.byteLength > 15 * 1024 * 1024) {
+    console.warn("[intelligence] Media file too large for inline analysis:", fileBuffer.byteLength, "bytes");
+    return null;
+  }
+
+  const ext = path.extname(mediaPath).toLowerCase();
+  const mimeType =
+    MIME_FROM_EXT[ext]?.[mediaType] ??
+    (mediaType === "image" ? "image/jpeg" : mediaType === "video" ? "video/webm" : "audio/webm");
+
+  const base64 = fileBuffer.toString("base64");
+  const topicsHint =
+    careTopics && careTopics.length > 0
+      ? `Pay special attention to these themes if relevant: ${careTopics.join(", ")}.`
+      : "";
+
+  const SCHEMA = `{
+  "transcription": "<transcription or visual description>",
+  "summary": "<2-4 warm factual sentences for adult children>",
+  "urgencyLevel": "summary_later" | "notify_soon" | "urgent_now",
+  "escalationReason": "<one short reason if not summary_later, otherwise empty string>"
+}`;
+
+  const prompts: Record<"audio" | "image" | "video", string> = {
+    audio: `You are a family care assistant. This is a voice message left by an elderly person for their family.
+${topicsHint}
+
+1. Transcribe exactly what was said.
+2. Analyse for wellness signals: mood, medication, food, activity, social wellbeing, any concerns.
+
+Return ONLY valid JSON matching this schema (no markdown fences):
+${SCHEMA}
+
+urgencyLevel rules:
+- summary_later: routine and stable.
+- notify_soon: missed meds, mild pain, loneliness, sleep issues.
+- urgent_now: emergency (chest pain, fall, severe confusion, breathing problems).`,
+
+    image: `You are a family care assistant. This photo was shared by an elderly person with their family.
+${topicsHint}
+
+1. Describe what you see (setting, person's appearance/activity if visible, surroundings).
+2. Note any wellness or safety concerns.
+
+Return ONLY valid JSON matching this schema (no markdown fences):
+${SCHEMA}
+
+urgencyLevel rules:
+- summary_later: everything looks normal and safe.
+- notify_soon: person appears unwell, unsafe environment, something needs attention.
+- urgent_now: visible emergency or immediate safety risk.`,
+
+    video: `You are a family care assistant. This short video was shared by an elderly person with their family.
+${topicsHint}
+
+1. Transcribe any speech.
+2. Describe what you observe (setting, activity, mood, movement, any concerns).
+3. Flag any wellness or safety signals.
+
+Return ONLY valid JSON matching this schema (no markdown fences):
+${SCHEMA}
+
+urgencyLevel rules:
+- summary_later: routine, stable, no safety concerns.
+- notify_soon: unsteady movement, mentions missed meds, appears unwell.
+- urgent_now: visible or audible emergency.`,
+  };
+
+  try {
+    const res = await fetch(`${GEMINI_URL}?key=${encodeURIComponent(key)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              { inline_data: { mime_type: mimeType, data: base64 } },
+              { text: prompts[mediaType] },
+            ],
+          },
+        ],
+        generationConfig: { temperature: 0.2, responseMimeType: "application/json" },
+      }),
+    });
+
+    if (!res.ok) {
+      console.error("[intelligence] Gemini media error", res.status, await res.text());
+      return null;
+    }
+
+    const data = (await res.json()) as {
+      candidates?: { content?: { parts?: { text?: string }[] } }[];
+    };
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) return null;
+
+    const parsed = parseJsonObject(text);
+    if (!parsed || typeof parsed.summary !== "string") return null;
+
+    return {
+      transcription: typeof parsed.transcription === "string" && parsed.transcription.trim()
+        ? parsed.transcription.trim()
+        : undefined,
+      summary: parsed.summary.trim(),
+      urgencyLevel: normalizeUrgency(parsed.urgencyLevel),
+      escalationReason:
+        typeof parsed.escalationReason === "string" && parsed.escalationReason.trim()
+          ? parsed.escalationReason.trim()
+          : undefined,
+    };
+  } catch (err) {
+    console.error("[intelligence] Gemini media analysis threw:", err);
+    return null;
+  }
+}
+
 /**
  * Full analysis for a submitted transcript (call or async update).
  * @param careTopics — optional topics from family settings to emphasize
@@ -131,8 +293,40 @@ export async function analyzeTranscript(
   summary: string;
   urgencyLevel: UrgencyLevel;
   escalationReason?: string;
+  aiTranscription?: string;
 }> {
   const { transcript, language } = request;
+
+  // Media-only loved-one update — run real multimodal Gemini analysis.
+  if (
+    request.initiatedBy === "loved_one" &&
+    !transcript?.trim() &&
+    request.mediaType &&
+    request.mediaPath
+  ) {
+    const mediaResult = await analyzeMediaFile(request.mediaPath, request.mediaType, careTopics);
+    if (mediaResult) {
+      console.log(`[intelligence] Media analysis OK — urgency: ${mediaResult.urgencyLevel}`);
+      return {
+        summary: mediaResult.summary,
+        urgencyLevel: mediaResult.urgencyLevel,
+        escalationReason: mediaResult.escalationReason,
+        aiTranscription: mediaResult.transcription,
+      };
+    }
+    // Fallback if Gemini media call fails
+    const label =
+      request.mediaType === "audio"
+        ? "voice message"
+        : request.mediaType === "video"
+          ? "video"
+          : "photo";
+    return {
+      summary: `Your loved one shared a ${label}. Open the attachment to listen or view it.`,
+      urgencyLevel: "summary_later",
+    };
+  }
+
   const langHint = language
     ? `The conversation may be in language/locale: ${language}. Still respond in clear English for the family dashboard.`
     : "";
@@ -206,6 +400,7 @@ export async function processTranscript(
   mediaType?: "audio" | "image" | "video";
   language?: string;
   callDurationSeconds?: number;
+  aiTranscription?: string;
 }> {
   const analysis = await analyzeTranscript(request, careTopics);
   return {
