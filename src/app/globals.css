@@ -358,15 +358,6 @@ body {
   }
 }
 
-@keyframes demo-escalation-progress {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(200%);
-  }
-}
-
 @keyframes demo-escalation-ping {
   0%,
   100% {
@@ -408,8 +399,10 @@ body {
 }
 
 .demo-escalation-progress-bar {
-  width: 40%;
-  animation: demo-escalation-progress 1.8s ease-in-out infinite;
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #e11d48, #fb7185);
+  transition: width 0.12s ease-out;
 }
 
 .demo-escalation-contact {

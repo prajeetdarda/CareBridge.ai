@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { CheckCircle2, HeartPulse, MapPin, MessageSquareText } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -20,6 +21,22 @@ function getAudioContextClass(): typeof AudioContext | null {
   return Ctx ?? null;
 }
 
+const DEMO_PROGRESS_MS = 4200;
+
+function perContactBar(
+  overallPct: number,
+  index: number,
+  total: number
+): { fill: number; notified: boolean } {
+  if (total <= 0) return { fill: 100, notified: true };
+  const start = (index / total) * 100;
+  const end = ((index + 1) / total) * 100;
+  if (overallPct >= end) return { fill: 100, notified: true };
+  if (overallPct <= start) return { fill: 0, notified: false };
+  const fill = ((overallPct - start) / (end - start)) * 100;
+  return { fill: Math.min(100, Math.max(0, fill)), notified: false };
+}
+
 export default function UrgentEmergencyDemo({
   children,
   backupContactNames = [],
@@ -35,6 +52,7 @@ export default function UrgentEmergencyDemo({
   const [escalationDismissed, setEscalationDismissed] = useState(false);
   const [soundNeedsTap, setSoundNeedsTap] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [demoProgress, setDemoProgress] = useState(0);
   const ctxRef = useRef<AudioContext | null>(null);
   const beepIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -103,6 +121,24 @@ export default function UrgentEmergencyDemo({
     return () => clearTimeout(t);
   }, [secondsLeft, resolved, showEscalation]);
 
+  /** Simulated notification progress when escalation modal opens */
+  useEffect(() => {
+    if (!showEscalation) {
+      setDemoProgress(0);
+      return;
+    }
+    setDemoProgress(0);
+    const start = performance.now();
+    let raf = 0;
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / DEMO_PROGRESS_MS);
+      setDemoProgress(Math.round(t * 100));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [showEscalation]);
+
   const unlockSound = useCallback(async () => {
     const Ctx = getAudioContextClass();
     if (!Ctx) return;
@@ -152,6 +188,10 @@ export default function UrgentEmergencyDemo({
       ? backupContactNames.slice(0, 4)
       : ["Emergency contact A", "Emergency contact B"];
 
+  const contactCount = displayNames.length;
+  const allContactsNotified =
+    contactCount > 0 && demoProgress >= 100;
+
   if (resolved) {
     return <>{children}</>;
   }
@@ -159,26 +199,26 @@ export default function UrgentEmergencyDemo({
   return (
     <>
       <div
-        className="sticky top-0 z-40 border-b-2 border-danger/50 bg-danger/15 px-4 py-3 backdrop-blur-sm dark:bg-danger/25"
+        className="sticky top-0 z-40 border-b border-zinc-200/70 bg-[#fff7f8]/95 px-4 py-3 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-900/90"
         role="status"
         aria-live="assertive"
       >
         <div className="mx-auto flex max-w-3xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-bold text-danger">
+            <p className="text-sm font-semibold text-[#e11d48] dark:text-rose-300">
               Urgent alert — action required
             </p>
             {!showEscalation && secondsLeft > 0 && (
-              <p className="mt-0.5 text-xs text-foreground/90">
+              <p className="mt-0.5 text-xs text-[#6b7280] dark:text-zinc-400">
                 Simulated auto-escalation in{" "}
-                <span className="font-mono font-bold tabular-nums">
+                <span className="font-mono font-semibold tabular-nums text-[#1f2937] dark:text-zinc-200">
                   {secondsLeft}
                 </span>
                 s if not acknowledged
               </p>
             )}
             {!showEscalation && secondsLeft === 0 && escalationDismissed && (
-              <p className="mt-0.5 text-xs text-muted">
+              <p className="mt-0.5 text-xs text-[#6b7280] dark:text-zinc-400">
                 Demo escalation was shown. Acknowledge to clear alerts.
               </p>
             )}
@@ -188,14 +228,14 @@ export default function UrgentEmergencyDemo({
               <button
                 type="button"
                 onClick={() => void unlockSound()}
-                className="rounded-lg border border-danger/40 bg-card px-3 py-1.5 text-xs font-medium"
+                className="rounded-full border border-rose-200/80 bg-white px-3 py-1.5 text-xs font-medium text-[#6b7280] transition hover:bg-rose-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
               >
                 Tap to enable alert sound
               </button>
             )}
             <Link
               href="/family/alerts"
-              className="rounded-lg border border-card-border bg-card px-3 py-1.5 text-xs font-medium hover:bg-background/80"
+              className="rounded-full border border-zinc-200/80 bg-white px-3 py-1.5 text-xs font-medium text-[#6b7280] transition hover:bg-[#f8f4f1] dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
             >
               Open alerts
             </Link>
@@ -203,7 +243,7 @@ export default function UrgentEmergencyDemo({
               type="button"
               disabled={busy}
               onClick={() => void acknowledgeAll()}
-              className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50"
+              className="rounded-full bg-[#e11d48] px-3 py-1.5 text-xs font-medium text-white shadow-sm transition hover:bg-[#be123c] disabled:opacity-50"
             >
               {busy ? "…" : "Acknowledge urgent"}
             </button>
@@ -220,46 +260,93 @@ export default function UrgentEmergencyDemo({
           aria-modal="true"
           aria-labelledby="demo-escalation-title"
         >
-          <div className="demo-escalation-panel relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border-2 border-danger/40 bg-card p-8 shadow-2xl">
-            <p className="mb-2 text-center text-xs font-medium uppercase tracking-wide text-muted">
+          <div className="demo-escalation-panel relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[1.25rem] border border-zinc-200/60 bg-white p-5 shadow-[0_8px_28px_rgba(0,0,0,0.12)] dark:border-zinc-700 dark:bg-zinc-900 sm:p-6">
+            <p className="mb-2 text-center text-xs font-semibold uppercase tracking-wider text-rose-600">
               Simulated for demo
             </p>
             <h2
               id="demo-escalation-title"
-              className="demo-escalation-title text-center text-xl font-bold text-danger"
+              className="demo-escalation-title text-center text-xl font-semibold text-[#1f2937] dark:text-zinc-100 sm:text-2xl"
             >
               Emergency escalation in progress
             </h2>
-            <p className="mt-3 text-center text-sm text-muted">
-              The AI care agent is reaching out to your immediate family
-              contacts. This is a visual simulation only — no messages are sent.
+            <p className="mt-2 text-center text-sm text-[#6b7280] dark:text-zinc-400">
+              Sharing location, medical context, and escalation message to
+              emergency contacts.
             </p>
 
-            <div
-              className="demo-escalation-progress-track mt-6 h-2 overflow-hidden rounded-full bg-muted/30"
-              aria-hidden
-            >
-              <div className="demo-escalation-progress-bar h-full rounded-full bg-danger" />
-            </div>
-
-            <ul className="mt-6 space-y-3">
-              {displayNames.map((name, i) => (
-                <li
-                  key={`${name}-${i}`}
-                  className="demo-escalation-contact flex items-center gap-2 rounded-lg border border-card-border bg-background/60 px-3 py-2 text-sm"
-                  style={{ animationDelay: `${i * 0.35}s` }}
-                >
-                  <span className="h-2 w-2 shrink-0 rounded-full bg-success demo-escalation-ping" />
-                  <span>
-                    Notifying: <strong>{name}</strong>
-                  </span>
-                </li>
-              ))}
+            <ul className="mt-4 grid gap-2 sm:grid-cols-3">
+              <li className="demo-escalation-contact flex items-center gap-2 rounded-lg border border-zinc-200/70 bg-[#f8f4f1] px-3 py-2 text-xs dark:border-zinc-700 dark:bg-zinc-800/70">
+                <MapPin className="h-4 w-4 shrink-0 text-rose-500" aria-hidden />
+                <span>
+                  <span className="font-semibold text-foreground">Location</span>
+                  <span className="text-muted-foreground"> · Last known area</span>
+                </span>
+              </li>
+              <li className="demo-escalation-contact flex items-center gap-2 rounded-lg border border-zinc-200/70 bg-[#f8f4f1] px-3 py-2 text-xs dark:border-zinc-700 dark:bg-zinc-800/70">
+                <HeartPulse className="h-4 w-4 shrink-0 text-rose-500" aria-hidden />
+                <span>
+                  <span className="font-semibold text-foreground">Medical</span>
+                  <span className="text-muted-foreground"> · Care profile summary</span>
+                </span>
+              </li>
+              <li className="demo-escalation-contact flex items-center gap-2 rounded-lg border border-zinc-200/70 bg-[#f8f4f1] px-3 py-2 text-xs dark:border-zinc-700 dark:bg-zinc-800/70 sm:col-span-1">
+                <MessageSquareText className="h-4 w-4 shrink-0 text-rose-500" aria-hidden />
+                <span>
+                  <span className="font-semibold text-foreground">Message</span>
+                  <span className="text-muted-foreground"> · AI escalation note</span>
+                </span>
+              </li>
             </ul>
 
-            <p className="demo-escalation-subtle mt-6 text-center text-xs text-muted">
-              Relaying situation summary · Stand by…
+            <p className="mt-4 text-sm font-semibold text-[#1f2937] dark:text-zinc-100">
+              Emergency contacts
             </p>
+            <ul className="mt-2 space-y-2.5">
+              {displayNames.map((name, i) => {
+                const { fill, notified } = perContactBar(
+                  demoProgress,
+                  i,
+                  contactCount
+                );
+                return (
+                  <li
+                    key={`${name}-${i}`}
+                    className="demo-escalation-contact rounded-lg border border-zinc-200/70 bg-[#f8f4f1] px-3 py-2.5 dark:border-zinc-700 dark:bg-zinc-800/70"
+                    style={{ animationDelay: `${i * 0.08}s` }}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="min-w-0 truncate text-sm font-semibold text-foreground">
+                        {name}
+                      </span>
+                      {notified ? (
+                        <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                          <CheckCircle2 className="h-4 w-4" aria-hidden />
+                          Notified
+                        </span>
+                      ) : null}
+                    </div>
+                    {!notified ? (
+                      <div
+                        className="demo-escalation-progress-track mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted/50 dark:bg-zinc-700/80"
+                        aria-hidden
+                      >
+                        <div
+                          className="demo-escalation-progress-bar h-full duration-100 ease-linear"
+                          style={{ width: `${fill}%` }}
+                        />
+                      </div>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+
+            {allContactsNotified ? (
+              <p className="demo-escalation-subtle mt-3 text-center text-xs text-muted-foreground">
+                Demo complete: all contacts notified.
+              </p>
+            ) : null}
 
             <div className="mt-8 flex flex-col gap-2 sm:flex-row sm:justify-center">
               <button
@@ -268,7 +355,7 @@ export default function UrgentEmergencyDemo({
                   setShowEscalation(false);
                   setEscalationDismissed(true);
                 }}
-                className="rounded-lg border border-card-border bg-background px-4 py-2 text-sm font-medium"
+                className="rounded-xl border border-card-border bg-background px-4 py-2.5 text-sm font-medium"
               >
                 Close demo
               </button>
@@ -276,7 +363,7 @@ export default function UrgentEmergencyDemo({
                 type="button"
                 disabled={busy}
                 onClick={() => void acknowledgeAll()}
-                className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                className="rounded-xl bg-[#e11d48] px-4 py-2.5 text-sm font-medium text-white shadow-md transition hover:bg-[#be123c] disabled:opacity-50"
               >
                 Acknowledge urgent
               </button>
