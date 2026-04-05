@@ -5,48 +5,76 @@ import type {
   GetSummariesResponse,
   SummaryRecord,
 } from "@/lib/types";
+import { processTranscript } from "@/lib/intelligence";
+import { addSummary, addAlert, getSummaries, getProfile } from "@/lib/storage";
 
 /**
- * GET  /api/summary — returns all summaries
- * POST /api/summary — receives transcript from Dev 1, runs LLM analysis, stores result
- *
- * Dev 2 owns this route.
- *
- * POST flow:
- *   1. Dev 1 calls this after a call ends or a parent leaves an update
- *   2. This handler runs LLM summarization (lib/intelligence.ts)
- *   3. Classifies urgency (summary_later / notify_soon / urgent_now)
- *   4. Stores the SummaryRecord (lib/storage.ts)
- *   5. If urgent, also creates an alert via /api/alerts logic
- *   6. Returns the completed SummaryRecord
+ * GET  /api/summary — returns all summaries (newest first)
+ * POST /api/summary — transcript handoff from Dev 1: LLM pipeline + storage + alerts
  */
 export async function GET() {
-  const response: GetSummariesResponse = { summaries: [] };
+  const list = getSummaries()
+    .slice()
+    .sort(
+      (a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+  const response: GetSummariesResponse = { summaries: list };
   return NextResponse.json(response);
 }
 
 export async function POST(request: Request) {
-  const body: SubmitSummaryRequest = await request.json();
+  let body: SubmitSummaryRequest;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
 
-  // TODO (Dev 2): Replace this stub with real LLM pipeline
-  // 1. Call lib/intelligence.ts → summarizeTranscript(body.transcript)
-  // 2. Call lib/intelligence.ts → classifyUrgency(body.transcript)
-  // 3. Store via lib/storage.ts → addSummary(record)
-  // 4. If urgencyLevel !== "summary_later", create alert
+  if (
+    !body?.sessionId ||
+    typeof body.transcript !== "string" ||
+    !body.initiatedBy
+  ) {
+    return NextResponse.json(
+      { error: "sessionId, transcript, and initiatedBy are required" },
+      { status: 400 }
+    );
+  }
 
-  const stub: SummaryRecord = {
-    id: body.sessionId ?? crypto.randomUUID(),
+  const { careTopics } = getProfile();
+  const analyzed = await processTranscript(body, careTopics);
+
+  const record: SummaryRecord = {
+    id: crypto.randomUUID(),
     timestamp: new Date().toISOString(),
     initiatedBy: body.initiatedBy,
-    transcript: body.transcript ?? "",
-    summary: "Stub — Dev 2 will implement LLM summarization here.",
-    urgencyLevel: "summary_later",
-    mediaPath: body.mediaPath,
-    mediaType: body.mediaType,
-    language: body.language,
-    callDurationSeconds: body.callDurationSeconds,
+    transcript: body.transcript,
+    summary: analyzed.summary,
+    urgencyLevel: analyzed.urgencyLevel,
+    escalationReason: analyzed.escalationReason,
+    mediaPath: analyzed.mediaPath,
+    mediaType: analyzed.mediaType,
+    language: analyzed.language,
+    callDurationSeconds: analyzed.callDurationSeconds,
   };
 
-  const response: SubmitSummaryResponse = { summary: stub };
+  addSummary(record);
+
+  if (analyzed.urgencyLevel !== "summary_later") {
+    addAlert({
+      id: crypto.randomUUID(),
+      sessionId: body.sessionId,
+      timestamp: new Date().toISOString(),
+      urgencyLevel: analyzed.urgencyLevel,
+      reason:
+        analyzed.escalationReason ??
+        `Check-in classified as ${analyzed.urgencyLevel.replace("_", " ")}`,
+      transcript: body.transcript,
+      acknowledged: false,
+    });
+  }
+
+  const response: SubmitSummaryResponse = { summary: record };
   return NextResponse.json(response);
 }
