@@ -69,6 +69,8 @@ export interface BackupContact {
   name: string;
   relationship: string;
   contactInfo: string;
+  /** Preferred escalation email address for urgent alerts */
+  email?: string;
   escalationPriority: number;
 }
 

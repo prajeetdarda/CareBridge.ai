@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, HeartPulse, MapPin, MessageSquareText } from "lucide-react";
+import { CheckCircle2, FileText, HeartPulse, Mail, MapPin, MessageSquareText, Phone } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -210,7 +210,7 @@ export default function UrgentEmergencyDemo({
             </p>
             {!showEscalation && secondsLeft > 0 && (
               <p className="mt-0.5 text-xs text-[#6b7280] dark:text-zinc-400">
-                Simulated auto-escalation in{" "}
+                Auto-escalation in{" "}
                 <span className="font-mono font-semibold tabular-nums text-[#1f2937] dark:text-zinc-200">
                   {secondsLeft}
                 </span>
@@ -219,7 +219,7 @@ export default function UrgentEmergencyDemo({
             )}
             {!showEscalation && secondsLeft === 0 && escalationDismissed && (
               <p className="mt-0.5 text-xs text-[#6b7280] dark:text-zinc-400">
-                Demo escalation was shown. Acknowledge to clear alerts.
+                Escalation emails sent. Acknowledge to clear alerts.
               </p>
             )}
           </div>
@@ -261,9 +261,6 @@ export default function UrgentEmergencyDemo({
           aria-labelledby="demo-escalation-title"
         >
           <div className="demo-escalation-panel relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[1.25rem] border border-zinc-200/60 bg-white p-5 shadow-[0_8px_28px_rgba(0,0,0,0.12)] dark:border-zinc-700 dark:bg-zinc-900 sm:p-6">
-            <p className="mb-2 text-center text-xs font-semibold uppercase tracking-wider text-rose-600">
-              Simulated for demo
-            </p>
             <h2
               id="demo-escalation-title"
               className="demo-escalation-title text-center text-xl font-semibold text-[#1f2937] dark:text-zinc-100 sm:text-2xl"
@@ -271,31 +268,65 @@ export default function UrgentEmergencyDemo({
               Emergency escalation in progress
             </h2>
             <p className="mt-2 text-center text-sm text-[#6b7280] dark:text-zinc-400">
-              Sharing location, medical context, and escalation message to
-              emergency contacts.
+              Sending escalation emails with care context to emergency contacts.
             </p>
 
-            <ul className="mt-4 grid gap-2 sm:grid-cols-3">
-              <li className="demo-escalation-contact flex items-center gap-2 rounded-lg border border-zinc-200/70 bg-[#f8f4f1] px-3 py-2 text-xs dark:border-zinc-700 dark:bg-zinc-800/70">
-                <MapPin className="h-4 w-4 shrink-0 text-rose-500" aria-hidden />
+            <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-[#6b7280] dark:text-zinc-400">
+              Included in escalation
+            </p>
+            <ul className="mt-2 grid gap-2 sm:grid-cols-2">
+              <li className="demo-escalation-contact flex items-center gap-2 rounded-lg border border-emerald-200/70 bg-emerald-50/60 px-3 py-2 text-xs dark:border-emerald-800/40 dark:bg-emerald-900/20">
+                <MapPin className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden />
                 <span>
                   <span className="font-semibold text-foreground">Location</span>
-                  <span className="text-muted-foreground"> · Last known area</span>
+                  <span className="text-muted-foreground"> · Shared</span>
                 </span>
+                <CheckCircle2 className="ml-auto h-3.5 w-3.5 shrink-0 text-emerald-500" aria-hidden />
               </li>
-              <li className="demo-escalation-contact flex items-center gap-2 rounded-lg border border-zinc-200/70 bg-[#f8f4f1] px-3 py-2 text-xs dark:border-zinc-700 dark:bg-zinc-800/70">
-                <HeartPulse className="h-4 w-4 shrink-0 text-rose-500" aria-hidden />
+              <li className="demo-escalation-contact flex items-center gap-2 rounded-lg border border-emerald-200/70 bg-emerald-50/60 px-3 py-2 text-xs dark:border-emerald-800/40 dark:bg-emerald-900/20">
+                <HeartPulse className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden />
                 <span>
                   <span className="font-semibold text-foreground">Medical</span>
-                  <span className="text-muted-foreground"> · Care profile summary</span>
+                  <span className="text-muted-foreground"> · Shared</span>
                 </span>
+                <CheckCircle2 className="ml-auto h-3.5 w-3.5 shrink-0 text-emerald-500" aria-hidden />
               </li>
-              <li className="demo-escalation-contact flex items-center gap-2 rounded-lg border border-zinc-200/70 bg-[#f8f4f1] px-3 py-2 text-xs dark:border-zinc-700 dark:bg-zinc-800/70 sm:col-span-1">
-                <MessageSquareText className="h-4 w-4 shrink-0 text-rose-500" aria-hidden />
+              <li className="demo-escalation-contact flex items-center gap-2 rounded-lg border border-emerald-200/70 bg-emerald-50/60 px-3 py-2 text-xs dark:border-emerald-800/40 dark:bg-emerald-900/20">
+                <FileText className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden />
                 <span>
-                  <span className="font-semibold text-foreground">Message</span>
-                  <span className="text-muted-foreground"> · AI escalation note</span>
+                  <span className="font-semibold text-foreground">AI summary</span>
+                  <span className="text-muted-foreground"> · Shared</span>
                 </span>
+                <CheckCircle2 className="ml-auto h-3.5 w-3.5 shrink-0 text-emerald-500" aria-hidden />
+              </li>
+              <li className="demo-escalation-contact flex items-center gap-2 rounded-lg border border-emerald-200/70 bg-emerald-50/60 px-3 py-2 text-xs dark:border-emerald-800/40 dark:bg-emerald-900/20">
+                <Mail className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden />
+                <span>
+                  <span className="font-semibold text-foreground">Email</span>
+                  <span className="text-muted-foreground"> · Live</span>
+                </span>
+                <CheckCircle2 className="ml-auto h-3.5 w-3.5 shrink-0 text-emerald-500" aria-hidden />
+              </li>
+            </ul>
+
+            <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-[#6b7280] dark:text-zinc-400">
+              Channels
+            </p>
+            <ul className="mt-2 grid gap-2 sm:grid-cols-3">
+              <li className="demo-escalation-contact flex items-center gap-2 rounded-lg border border-emerald-200/70 bg-emerald-50/60 px-3 py-2 text-xs dark:border-emerald-800/40 dark:bg-emerald-900/20">
+                <Mail className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden />
+                <span className="font-semibold text-foreground">Email</span>
+                <CheckCircle2 className="ml-auto h-3.5 w-3.5 shrink-0 text-emerald-500" aria-hidden />
+              </li>
+              <li className="demo-escalation-contact flex items-center gap-2 rounded-lg border border-zinc-200/70 bg-[#f8f4f1] px-3 py-2 text-xs dark:border-zinc-700 dark:bg-zinc-800/70">
+                <Phone className="h-4 w-4 shrink-0 text-zinc-400" aria-hidden />
+                <span className="font-semibold text-muted-foreground">Phone</span>
+                <span className="ml-auto text-[10px] text-muted-foreground">Soon</span>
+              </li>
+              <li className="demo-escalation-contact flex items-center gap-2 rounded-lg border border-zinc-200/70 bg-[#f8f4f1] px-3 py-2 text-xs dark:border-zinc-700 dark:bg-zinc-800/70">
+                <MessageSquareText className="h-4 w-4 shrink-0 text-zinc-400" aria-hidden />
+                <span className="font-semibold text-muted-foreground">SMS</span>
+                <span className="ml-auto text-[10px] text-muted-foreground">Soon</span>
               </li>
             </ul>
 
@@ -322,7 +353,7 @@ export default function UrgentEmergencyDemo({
                       {notified ? (
                         <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
                           <CheckCircle2 className="h-4 w-4" aria-hidden />
-                          Notified
+                          Email sent
                         </span>
                       ) : null}
                     </div>
@@ -343,9 +374,15 @@ export default function UrgentEmergencyDemo({
             </ul>
 
             {allContactsNotified ? (
-              <p className="demo-escalation-subtle mt-3 text-center text-xs text-muted-foreground">
-                Demo complete: all contacts notified.
-              </p>
+              <div className="mt-3 space-y-1.5 text-center">
+                <p className="flex items-center justify-center gap-1.5 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 className="h-4 w-4" aria-hidden />
+                  All escalation emails sent successfully
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Phone calls &amp; SMS alerts will be added in the next release — email is the live proof of concept.
+                </p>
+              </div>
             ) : null}
 
             <div className="mt-8 flex flex-col gap-2 sm:flex-row sm:justify-center">
@@ -357,7 +394,7 @@ export default function UrgentEmergencyDemo({
                 }}
                 className="rounded-xl border border-card-border bg-background px-4 py-2.5 text-sm font-medium"
               >
-                Close demo
+                Close
               </button>
               <button
                 type="button"

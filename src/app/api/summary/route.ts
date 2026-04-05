@@ -7,6 +7,10 @@ import type {
 } from "@/lib/types";
 import { processTranscript } from "@/lib/intelligence";
 import { addSummary, addAlert, getSummaries, getProfile } from "@/lib/storage";
+import {
+  extractEscalationRecipients,
+  sendUrgentEscalationEmails,
+} from "@/lib/escalation-email";
 
 /**
  * GET  /api/summary — returns all summaries (newest first)
@@ -42,11 +46,37 @@ export async function POST(request: Request) {
     );
   }
 
-  const { careTopics } = getProfile();
+  const profile = getProfile();
+  const { careTopics } = profile;
   const analyzed = await processTranscript(body, careTopics);
 
   // For media-only updates, prefer the AI-extracted transcription over the empty client string
   const storedTranscript = analyzed.aiTranscription ?? body.transcript;
+
+  let actionTaken: string | undefined;
+  if (analyzed.urgencyLevel === "urgent_now") {
+    try {
+      const recipients = extractEscalationRecipients(profile.backupContacts);
+      const sendResult = await sendUrgentEscalationEmails({
+        recipients,
+        lovedOneName: profile.lovedOneName || "Loved one",
+        familyMemberName: profile.familyMemberName || "Family",
+        reason: analyzed.escalationReason ?? "Urgent wellness concern flagged by AI analysis.",
+        urgencyLevel: analyzed.urgencyLevel,
+        timestampIso: new Date().toISOString(),
+        sessionId: body.sessionId,
+      });
+
+      if (sendResult.sentCount > 0) {
+        actionTaken = `Escalation email sent to ${sendResult.sentCount} support contact${sendResult.sentCount > 1 ? "s" : ""}.`;
+      } else {
+        actionTaken = "Urgent alert created, but no valid support-contact email was configured.";
+      }
+    } catch (err) {
+      console.error("[summary] escalation email failed:", err);
+      actionTaken = "Urgent alert created, but escalation email failed to send.";
+    }
+  }
 
   const record: SummaryRecord = {
     id: crypto.randomUUID(),
@@ -56,6 +86,7 @@ export async function POST(request: Request) {
     summary: analyzed.summary,
     urgencyLevel: analyzed.urgencyLevel,
     escalationReason: analyzed.escalationReason,
+    actionTaken,
     mediaPath: analyzed.mediaPath,
     mediaType: analyzed.mediaType,
     language: analyzed.language,

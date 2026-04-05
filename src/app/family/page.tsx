@@ -17,7 +17,7 @@ async function fetchJson<T>(path: string, fallback: T): Promise<T> {
 
 function countEmergencyContacts(contacts: BackupContact[]): number {
   return contacts.filter(
-    (c) => Boolean(c.name?.trim() || c.contactInfo?.trim())
+    (c) => Boolean(c.name?.trim() || c.contactInfo?.trim() || c.email?.trim())
   ).length;
 }
 

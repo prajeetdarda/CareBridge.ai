@@ -115,6 +115,10 @@ GOOGLE_API_KEY=your_google_api_key
 ELEVENLABS_API_KEY=your_elevenlabs_api_key
 ELEVENLABS_AGENT_ID=your_elevenlabs_agent_id
 ELEVENLABS_VOICE_ID=your_elevenlabs_voice_id
+
+# Optional — real urgent escalation email (Resend)
+RESEND_API_KEY=your_resend_api_key
+RESEND_FROM_EMAIL=CareBridge Alerts <alerts@yourdomain.com>
 ```
 
 ### Run Development Server

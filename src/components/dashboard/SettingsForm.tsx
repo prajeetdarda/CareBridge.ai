@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { UserRound } from "lucide-react";
 import type { FamilyProfile, ReminderRecord, BackupContact } from "@/lib/types";
 import {
   normalizeParentLang,
@@ -87,7 +86,13 @@ export default function SettingsForm({ initial }: SettingsFormProps) {
       ...p,
       backupContacts: [
         ...p.backupContacts,
-        { name: "", relationship: "", contactInfo: "", escalationPriority: p.backupContacts.length + 1 },
+        {
+          name: "",
+          relationship: "",
+          contactInfo: "",
+          email: "",
+          escalationPriority: p.backupContacts.length + 1,
+        },
       ],
     }));
   }
@@ -317,7 +322,19 @@ export default function SettingsForm({ initial }: SettingsFormProps) {
             <li key={i} className={`space-y-2 rounded-xl border p-3 ${surfaceBg}`}>
               <input className={`w-full ${smallInputCls}`} placeholder="Name" value={c.name} onChange={(e) => updateBackup(i, "name", e.target.value)} />
               <input className={`w-full ${smallInputCls}`} placeholder="Relationship" value={c.relationship} onChange={(e) => updateBackup(i, "relationship", e.target.value)} />
-              <input className={`w-full ${smallInputCls}`} placeholder="Phone or email" value={c.contactInfo} onChange={(e) => updateBackup(i, "contactInfo", e.target.value)} />
+              <input
+                className={`w-full ${smallInputCls}`}
+                type="email"
+                placeholder="Escalation email"
+                value={c.email ?? ""}
+                onChange={(e) => updateBackup(i, "email", e.target.value)}
+              />
+              <input
+                className={`w-full ${smallInputCls}`}
+                placeholder="Phone or alternate contact"
+                value={c.contactInfo}
+                onChange={(e) => updateBackup(i, "contactInfo", e.target.value)}
+              />
               <div className="flex items-center justify-between">
                 <label className={`text-xs ${mutedText}`}>
                   Priority

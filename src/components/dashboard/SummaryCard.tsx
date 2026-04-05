@@ -41,7 +41,7 @@ const TOPIC_DETECTORS: { keyword: RegExp; label: string; Icon: typeof Pill; colo
   { keyword: /\b(social|friend|family|visit|lonely|alone|companion|talk)\b/i, label: "Social", Icon: Users, color: "bg-pink-100 text-pink-600", darkColor: "bg-pink-900/40 text-pink-300" },
 ];
 
-function detectTopics(text: string, isDark: boolean) {
+function detectTopics(text: string) {
   return TOPIC_DETECTORS.filter((d) => d.keyword.test(text)).slice(0, 3);
 }
 
@@ -50,10 +50,7 @@ export default function SummaryCard({ summary }: SummaryCardProps) {
   const [open, setOpen] = useState(false);
   const style = urgencyStyles[summary.urgencyLevel];
   const source = sourceLabels[summary.initiatedBy];
-  const topics = detectTopics(
-    `${summary.summary} ${summary.transcript ?? ""}`,
-    isDark
-  );
+  const topics = detectTopics(`${summary.summary} ${summary.transcript ?? ""}`);
   const mediaPathTrim = summary.mediaPath?.trim() ?? "";
   const isPcmRecording = mediaPathTrim.toLowerCase().endsWith(".pcm");
   const isWebm = /\.webm$/i.test(mediaPathTrim);
@@ -133,6 +130,18 @@ export default function SummaryCard({ summary }: SummaryCardProps) {
           }`}
         >
           <Heart className="mr-1 inline h-3 w-3" /> {summary.escalationReason}
+        </p>
+      )}
+
+      {summary.actionTaken && (
+        <p
+          className={`mt-2 rounded-lg border px-3 py-2 text-xs ${
+            isDark
+              ? "border-emerald-800/40 bg-emerald-900/20 text-emerald-300"
+              : "border-emerald-300/50 bg-emerald-50 text-emerald-700"
+          }`}
+        >
+          {summary.actionTaken}
         </p>
       )}
 
